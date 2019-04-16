@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 using FAES;
 
@@ -14,6 +15,7 @@ namespace FileAES
         private bool _inProgress = false;
         private bool _decryptSuccessful;
         private string _fileToDecrypt, _autoPassword;
+        private decimal _progress = 0;
 
         public FileAES_Decrypt(string file, string password = null)
         {
@@ -44,6 +46,7 @@ namespace FileAES
         {
             if (decryptButton.Enabled)
             {
+                _progress = 0;
                 if (Core.isDecryptFileValid(_fileToDecrypt) && !_inProgress) backgroundDecrypt.RunWorkerAsync();
                 else if (_inProgress) setNoteLabel("Decryption already in progress.", 1);
                 else setNoteLabel("Decryption Failed. Try again later.", 1);
@@ -79,9 +82,18 @@ namespace FileAES
 
                 while (!backgroundDecrypt.CancellationPending)
                 {
-                    FAES.FileAES_Decrypt encrypt = new FAES.FileAES_Decrypt(new FAES_File(_fileToDecrypt), passwordInput.Text);
+                    FAES.FileAES_Decrypt decrypt = new FAES.FileAES_Decrypt(new FAES_File(_fileToDecrypt), passwordInput.Text);
 
-                    _decryptSuccessful = encrypt.decryptFile();
+                    Thread dThread = new Thread(() =>
+                    {
+                        _decryptSuccessful = decrypt.decryptFile();
+                    });
+                    dThread.Start();
+
+                    while (dThread.ThreadState == ThreadState.Running)
+                    {
+                        _progress = decrypt.GetDecryptionPercentComplete();
+                    }
 
                     backgroundDecrypt.CancelAsync();
                 }
@@ -110,6 +122,11 @@ namespace FileAES
             {
                 decryptButton.Enabled = false;
                 passwordInput.Enabled = false;
+
+                if (_progress < 100)
+                    progressBar.Value = Convert.ToInt32(Math.Ceiling(_progress));
+                else
+                    progressBar.Value = 100;
             }
             else if (Core.isDecryptFileValid(_fileToDecrypt) && passwordInput.Text.Length > 3 && !_inProgress)
             {

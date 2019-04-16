@@ -43,6 +43,7 @@
             this.hintLabel = new System.Windows.Forms.Label();
             this.hintTextbox = new System.Windows.Forms.TextBox();
             this.slowToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.progressBar = new FileAES.TextProgressBar();
             this.SuspendLayout();
             // 
             // fileName
@@ -61,7 +62,7 @@
             // 
             this.decryptButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.decryptButton.Enabled = false;
-            this.decryptButton.Location = new System.Drawing.Point(12, 126);
+            this.decryptButton.Location = new System.Drawing.Point(12, 145);
             this.decryptButton.Name = "decryptButton";
             this.decryptButton.Size = new System.Drawing.Size(228, 23);
             this.decryptButton.TabIndex = 14;
@@ -71,7 +72,7 @@
             // 
             // passwordInput
             // 
-            this.passwordInput.Location = new System.Drawing.Point(74, 43);
+            this.passwordInput.Location = new System.Drawing.Point(74, 38);
             this.passwordInput.Name = "passwordInput";
             this.passwordInput.PasswordChar = '*';
             this.passwordInput.Size = new System.Drawing.Size(167, 20);
@@ -81,7 +82,7 @@
             // passwordLabel
             // 
             this.passwordLabel.AutoSize = true;
-            this.passwordLabel.Location = new System.Drawing.Point(12, 46);
+            this.passwordLabel.Location = new System.Drawing.Point(12, 41);
             this.passwordLabel.Name = "passwordLabel";
             this.passwordLabel.Size = new System.Drawing.Size(56, 13);
             this.passwordLabel.TabIndex = 10;
@@ -113,7 +114,7 @@
             this.noteLabel.AutoEllipsis = true;
             this.noteLabel.BackColor = System.Drawing.SystemColors.Control;
             this.noteLabel.ForeColor = System.Drawing.Color.Black;
-            this.noteLabel.Location = new System.Drawing.Point(8, 100);
+            this.noteLabel.Location = new System.Drawing.Point(8, 98);
             this.noteLabel.Name = "noteLabel";
             this.noteLabel.Size = new System.Drawing.Size(236, 23);
             this.noteLabel.TabIndex = 15;
@@ -124,7 +125,7 @@
             // copyrightLabel
             // 
             this.copyrightLabel.AutoSize = true;
-            this.copyrightLabel.Location = new System.Drawing.Point(164, 154);
+            this.copyrightLabel.Location = new System.Drawing.Point(164, 173);
             this.copyrightLabel.Name = "copyrightLabel";
             this.copyrightLabel.Size = new System.Drawing.Size(88, 13);
             this.copyrightLabel.TabIndex = 17;
@@ -132,7 +133,7 @@
             // 
             // versionLabel
             // 
-            this.versionLabel.Location = new System.Drawing.Point(0, 154);
+            this.versionLabel.Location = new System.Drawing.Point(0, 173);
             this.versionLabel.Name = "versionLabel";
             this.versionLabel.Size = new System.Drawing.Size(158, 13);
             this.versionLabel.TabIndex = 18;
@@ -142,7 +143,7 @@
             // hintLabel
             // 
             this.hintLabel.AutoSize = true;
-            this.hintLabel.Location = new System.Drawing.Point(12, 71);
+            this.hintLabel.Location = new System.Drawing.Point(12, 66);
             this.hintLabel.Name = "hintLabel";
             this.hintLabel.Size = new System.Drawing.Size(53, 26);
             this.hintLabel.TabIndex = 19;
@@ -150,7 +151,7 @@
             // 
             // hintTextbox
             // 
-            this.hintTextbox.Location = new System.Drawing.Point(74, 71);
+            this.hintTextbox.Location = new System.Drawing.Point(74, 66);
             this.hintTextbox.MaxLength = 64;
             this.hintTextbox.Multiline = true;
             this.hintTextbox.Name = "hintTextbox";
@@ -165,12 +166,26 @@
             this.slowToolTip.InitialDelay = 1000;
             this.slowToolTip.ReshowDelay = 100;
             // 
+            // progressBar
+            // 
+            this.progressBar.CustomText = "";
+            this.progressBar.Location = new System.Drawing.Point(12, 124);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.ProgressColor = System.Drawing.Color.Lime;
+            this.progressBar.Size = new System.Drawing.Size(228, 18);
+            this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.progressBar.TabIndex = 23;
+            this.progressBar.TextColor = System.Drawing.Color.Black;
+            this.progressBar.TextFont = new System.Drawing.Font("Microsoft Sans Serif", 7.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.progressBar.VisualMode = FileAES.ProgressBarDisplayMode.Percentage;
+            // 
             // FileAES_Decrypt
             // 
             this.AcceptButton = this.decryptButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(251, 168);
+            this.ClientSize = new System.Drawing.Size(251, 187);
+            this.Controls.Add(this.progressBar);
             this.Controls.Add(this.hintTextbox);
             this.Controls.Add(this.hintLabel);
             this.Controls.Add(this.versionLabel);
@@ -208,5 +223,6 @@
         private System.Windows.Forms.Label hintLabel;
         private System.Windows.Forms.TextBox hintTextbox;
         private System.Windows.Forms.ToolTip slowToolTip;
+        private TextProgressBar progressBar;
     }
 }

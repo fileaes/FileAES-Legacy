@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 class Core
 {
-    private const bool flagIsDevBuild = false;
+    private const bool flagIsDevBuild = true;
 
     public static bool isEncryptFileValid(string path)
     {
@@ -44,12 +44,12 @@ class Core
     {
         if (formatted)
         {
-            if (isDebugBuild() && flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
+            if (isDebugBuild() || flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
             else return "v" + Application.ProductVersion;
         }
         if (!raw)
         {
-            if (isDebugBuild() && flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
+            if (isDebugBuild() || flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
             else return "v" + Application.ProductVersion;
         }
         else return Application.ProductVersion;

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace FileAES
@@ -15,6 +16,7 @@ namespace FileAES
         private bool _inProgress = false;
         private bool _encryptSuccessful;
         private string _fileToEncrypt, _autoPassword;
+        private decimal _progress = 0;
 
         public FileAES_Encrypt(string file, string password = null)
         {
@@ -63,6 +65,7 @@ namespace FileAES
         {
             if (encryptButton.Enabled)
             {
+                _progress = 0;
                 if (Core.isEncryptFileValid(_fileToEncrypt) && !_inProgress && passwordInputConf.Text == passwordInput.Text) backgroundEncrypt.RunWorkerAsync();
                 else if (passwordInputConf.Text != passwordInput.Text) setNoteLabel("Passwords do not match!", 2);
                 else if (_inProgress) setNoteLabel("Encryption already in progress.", 1);
@@ -87,7 +90,16 @@ namespace FileAES
 
                     encrypt.SetCompressionMode(FAES.Packaging.CompressionUtils.GetAllOptimiseModes()[compressMode.SelectedIndex]);
 
-                    _encryptSuccessful = encrypt.encryptFile();
+                    Thread eThread = new Thread(() =>
+                    {
+                        _encryptSuccessful = encrypt.encryptFile();
+                    });
+                    eThread.Start();
+
+                    while (eThread.ThreadState == ThreadState.Running)
+                    {
+                        _progress = encrypt.GetEncryptionPercentComplete();
+                    }
 
                     backgroundEncrypt.CancelAsync();
                 }
@@ -137,6 +149,11 @@ namespace FileAES
                 passwordInputConf.Enabled = false;
                 hintInput.Enabled = false;
                 compressMode.Enabled = false;
+
+                if (_progress < 100)
+                    progressBar.Value = Convert.ToInt32(Math.Ceiling(_progress));
+                else
+                    progressBar.Value = 100;
             }
             else if (Core.isEncryptFileValid(_fileToEncrypt) && passwordInput.Text.Length > 3 && passwordInputConf.Text.Length > 3 && !_inProgress)
             {

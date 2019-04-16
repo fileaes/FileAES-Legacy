@@ -47,6 +47,7 @@
             this.slowToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.compressModeLabel = new System.Windows.Forms.Label();
             this.compressMode = new System.Windows.Forms.ComboBox();
+            this.progressBar = new FileAES.TextProgressBar();
             this.SuspendLayout();
             // 
             // pathLabel
@@ -61,7 +62,7 @@
             // passwordLabel
             // 
             this.passwordLabel.AutoSize = true;
-            this.passwordLabel.Location = new System.Drawing.Point(12, 46);
+            this.passwordLabel.Location = new System.Drawing.Point(12, 41);
             this.passwordLabel.Name = "passwordLabel";
             this.passwordLabel.Size = new System.Drawing.Size(56, 13);
             this.passwordLabel.TabIndex = 2;
@@ -70,7 +71,7 @@
             // passwordConfLabel
             // 
             this.passwordConfLabel.AutoSize = true;
-            this.passwordConfLabel.Location = new System.Drawing.Point(12, 71);
+            this.passwordConfLabel.Location = new System.Drawing.Point(12, 63);
             this.passwordConfLabel.Name = "passwordConfLabel";
             this.passwordConfLabel.Size = new System.Drawing.Size(56, 26);
             this.passwordConfLabel.TabIndex = 3;
@@ -78,7 +79,7 @@
             // 
             // passwordInput
             // 
-            this.passwordInput.Location = new System.Drawing.Point(74, 43);
+            this.passwordInput.Location = new System.Drawing.Point(74, 38);
             this.passwordInput.Name = "passwordInput";
             this.passwordInput.PasswordChar = '*';
             this.passwordInput.Size = new System.Drawing.Size(167, 20);
@@ -87,7 +88,7 @@
             // 
             // passwordInputConf
             // 
-            this.passwordInputConf.Location = new System.Drawing.Point(74, 77);
+            this.passwordInputConf.Location = new System.Drawing.Point(74, 69);
             this.passwordInputConf.Name = "passwordInputConf";
             this.passwordInputConf.PasswordChar = '*';
             this.passwordInputConf.Size = new System.Drawing.Size(167, 20);
@@ -97,7 +98,7 @@
             // encryptButton
             // 
             this.encryptButton.Enabled = false;
-            this.encryptButton.Location = new System.Drawing.Point(12, 212);
+            this.encryptButton.Location = new System.Drawing.Point(12, 209);
             this.encryptButton.Name = "encryptButton";
             this.encryptButton.Size = new System.Drawing.Size(228, 23);
             this.encryptButton.TabIndex = 8;
@@ -122,9 +123,9 @@
             this.noteLabel.AutoEllipsis = true;
             this.noteLabel.BackColor = System.Drawing.SystemColors.Control;
             this.noteLabel.ForeColor = System.Drawing.Color.Black;
-            this.noteLabel.Location = new System.Drawing.Point(9, 179);
+            this.noteLabel.Location = new System.Drawing.Point(9, 160);
             this.noteLabel.Name = "noteLabel";
-            this.noteLabel.Size = new System.Drawing.Size(235, 30);
+            this.noteLabel.Size = new System.Drawing.Size(235, 24);
             this.noteLabel.TabIndex = 7;
             this.noteLabel.Text = "Note: Press \'Encrypt\' to encrypt your chosen file.";
             this.noteLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
@@ -145,7 +146,7 @@
             // copyrightLabel
             // 
             this.copyrightLabel.AutoSize = true;
-            this.copyrightLabel.Location = new System.Drawing.Point(165, 238);
+            this.copyrightLabel.Location = new System.Drawing.Point(165, 235);
             this.copyrightLabel.Name = "copyrightLabel";
             this.copyrightLabel.Size = new System.Drawing.Size(88, 13);
             this.copyrightLabel.TabIndex = 18;
@@ -153,7 +154,7 @@
             // 
             // versionLabel
             // 
-            this.versionLabel.Location = new System.Drawing.Point(-1, 238);
+            this.versionLabel.Location = new System.Drawing.Point(-1, 235);
             this.versionLabel.Name = "versionLabel";
             this.versionLabel.Size = new System.Drawing.Size(160, 13);
             this.versionLabel.TabIndex = 19;
@@ -163,7 +164,7 @@
             // passwordHintLabel
             // 
             this.passwordHintLabel.AutoSize = true;
-            this.passwordHintLabel.Location = new System.Drawing.Point(12, 108);
+            this.passwordHintLabel.Location = new System.Drawing.Point(12, 99);
             this.passwordHintLabel.Name = "passwordHintLabel";
             this.passwordHintLabel.Size = new System.Drawing.Size(53, 26);
             this.passwordHintLabel.TabIndex = 20;
@@ -171,7 +172,7 @@
             // 
             // hintInput
             // 
-            this.hintInput.Location = new System.Drawing.Point(74, 108);
+            this.hintInput.Location = new System.Drawing.Point(74, 99);
             this.hintInput.MaxLength = 64;
             this.hintInput.Multiline = true;
             this.hintInput.Name = "hintInput";
@@ -189,7 +190,7 @@
             // compressModeLabel
             // 
             this.compressModeLabel.AutoSize = true;
-            this.compressModeLabel.Location = new System.Drawing.Point(12, 151);
+            this.compressModeLabel.Location = new System.Drawing.Point(12, 138);
             this.compressModeLabel.Name = "compressModeLabel";
             this.compressModeLabel.Size = new System.Drawing.Size(37, 13);
             this.compressModeLabel.TabIndex = 21;
@@ -199,17 +200,31 @@
             // 
             this.compressMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.compressMode.FormattingEnabled = true;
-            this.compressMode.Location = new System.Drawing.Point(74, 148);
+            this.compressMode.Location = new System.Drawing.Point(74, 135);
             this.compressMode.Name = "compressMode";
             this.compressMode.Size = new System.Drawing.Size(167, 21);
             this.compressMode.TabIndex = 7;
+            // 
+            // progressBar
+            // 
+            this.progressBar.CustomText = "";
+            this.progressBar.Location = new System.Drawing.Point(12, 188);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.ProgressColor = System.Drawing.Color.Lime;
+            this.progressBar.Size = new System.Drawing.Size(228, 18);
+            this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.progressBar.TabIndex = 22;
+            this.progressBar.TextColor = System.Drawing.Color.Black;
+            this.progressBar.TextFont = new System.Drawing.Font("Microsoft Sans Serif", 7.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.progressBar.VisualMode = FileAES.ProgressBarDisplayMode.Percentage;
             // 
             // FileAES_Encrypt
             // 
             this.AcceptButton = this.encryptButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(252, 253);
+            this.ClientSize = new System.Drawing.Size(252, 249);
+            this.Controls.Add(this.progressBar);
             this.Controls.Add(this.compressMode);
             this.Controls.Add(this.compressModeLabel);
             this.Controls.Add(this.hintInput);
@@ -256,5 +271,6 @@
         private System.Windows.Forms.ToolTip slowToolTip;
         private System.Windows.Forms.Label compressModeLabel;
         private System.Windows.Forms.ComboBox compressMode;
+        private TextProgressBar progressBar;
     }
 }
