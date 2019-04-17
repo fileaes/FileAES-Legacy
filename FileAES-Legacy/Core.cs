@@ -7,7 +7,8 @@ using System.Windows.Forms;
 
 class Core
 {
-    private const bool flagIsDevBuild = true;
+    private const bool _flagIsDevBuild = true;
+    private const string _copyrightInfo = "mullak99 © 2019";
 
     public static bool isEncryptFileValid(string path)
     {
@@ -44,15 +45,20 @@ class Core
     {
         if (formatted)
         {
-            if (isDebugBuild() || flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
+            if (isDebugBuild() || _flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
             else return "v" + Application.ProductVersion;
         }
         if (!raw)
         {
-            if (isDebugBuild() || flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
+            if (isDebugBuild() || _flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
             else return "v" + Application.ProductVersion;
         }
         else return Application.ProductVersion;
+    }
+
+    public string getCopyrightInfo()
+    {
+        return _copyrightInfo;
     }
 
     public bool IsDirectoryEmpty(string path)

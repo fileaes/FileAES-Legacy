@@ -23,10 +23,14 @@ namespace FileAES
             else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.getVersionInfo();
+            copyrightLabel.Text = core.getCopyrightInfo();
             if (Program.doDecrypt) fileName.Text = Path.GetFileName(_fileToDecrypt);
             this.Focus();
             this.ActiveControl = passwordInput;
             _autoPassword = password;
+
+            progressBar.CustomText = "";
+            progressBar.VisualMode = ProgressBarDisplayMode.Percentage;
         }
 
         private void FileAES_Decrypt_Load(object sender, EventArgs e)
@@ -113,7 +117,12 @@ namespace FileAES
         {
             _inProgress = false;
             if (_decryptSuccessful) Application.Exit();
-            else setNoteLabel("Password Incorrect!", 3);
+            else
+            {
+                setNoteLabel("Password Incorrect!", 3);
+                progressBar.CustomText = "Password Incorrect!";
+                progressBar.VisualMode = ProgressBarDisplayMode.TextAndPercentage;
+            }
         }
 
         private void runtime_Tick(object sender, EventArgs e)
@@ -124,9 +133,18 @@ namespace FileAES
                 passwordInput.Enabled = false;
 
                 if (_progress < 100)
+                {
+                    if (_progress < 99) progressBar.CustomText = "Decrypting";
+                    else progressBar.CustomText = "Uncompressing";
+                    progressBar.VisualMode = ProgressBarDisplayMode.TextAndPercentage;
                     progressBar.Value = Convert.ToInt32(Math.Ceiling(_progress));
+                }
                 else
+                {
+                    progressBar.CustomText = "Finishing";
+                    progressBar.VisualMode = ProgressBarDisplayMode.TextAndPercentage;
                     progressBar.Value = 100;
+                }
             }
             else if (Core.isDecryptFileValid(_fileToDecrypt) && passwordInput.Text.Length > 3 && !_inProgress)
             {

@@ -24,12 +24,16 @@ namespace FileAES
             else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.getVersionInfo();
+            copyrightLabel.Text = core.getCopyrightInfo();
             populateCompressionModes();
             if (Program.doEncryptFile) fileName.Text = Path.GetFileName(_fileToEncrypt);
             else if (Program.doEncryptFolder) fileName.Text = Path.GetFileName(_fileToEncrypt.TrimEnd(Path.DirectorySeparatorChar));
             this.Focus();
             this.ActiveControl = passwordInput;
             _autoPassword = password;
+
+            progressBar.CustomText = "";
+            progressBar.VisualMode = ProgressBarDisplayMode.Percentage;
         }
 
         private void FileAES_Encrypt_Load(object sender, EventArgs e)
@@ -151,9 +155,18 @@ namespace FileAES
                 compressMode.Enabled = false;
 
                 if (_progress < 100)
+                {
+                    if (_progress > 0) progressBar.CustomText = "Encrypting";
+                    else progressBar.CustomText = "Compressing";
+                    progressBar.VisualMode = ProgressBarDisplayMode.TextAndPercentage;
                     progressBar.Value = Convert.ToInt32(Math.Ceiling(_progress));
+                }
                 else
+                {
+                    progressBar.CustomText = "Finishing";
+                    progressBar.VisualMode = ProgressBarDisplayMode.TextAndPercentage;
                     progressBar.Value = 100;
+                }
             }
             else if (Core.isEncryptFileValid(_fileToEncrypt) && passwordInput.Text.Length > 3 && passwordInputConf.Text.Length > 3 && !_inProgress)
             {

@@ -25,6 +25,7 @@ namespace FileAES
             InitializeComponent();
             checkForUpdate();
             FaesVersion.Text = "FAES Version: " + FAES.FileAES_Utilities.GetVersion();
+            copyrightLabel.Text = core.getCopyrightInfo();
         }
 
         private void updateCurrentVersion()

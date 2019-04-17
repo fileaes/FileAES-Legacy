@@ -21,6 +21,7 @@ namespace FileAES
         {
             InitializeComponent();
             versionLabel.Text = core.getVersionInfo();
+            copyrightLabel.Text = core.getCopyrightInfo();
         }
 
         private void FileAES_Main_Load(object sender, EventArgs e)
