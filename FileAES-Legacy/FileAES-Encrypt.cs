@@ -1,10 +1,10 @@
-﻿using FAES;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using FAES;
 
 namespace FileAES
 {
@@ -15,19 +15,20 @@ namespace FileAES
 
         private bool _inProgress = false;
         private bool _encryptSuccessful;
-        private string _fileToEncrypt, _autoPassword;
+        private FAES_File _fileToEncrypt;
+        private string _autoPassword;
         private decimal _progress = 0;
 
         public FileAES_Encrypt(string file, string password = null)
         {
-            if (!String.IsNullOrEmpty(file)) _fileToEncrypt = file;
+            if (!String.IsNullOrEmpty(file)) _fileToEncrypt = new FAES_File(file);
             else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.getVersionInfo();
             copyrightLabel.Text = core.getCopyrightInfo();
             populateCompressionModes();
-            if (Program.doEncryptFile) fileName.Text = Path.GetFileName(_fileToEncrypt);
-            else if (Program.doEncryptFolder) fileName.Text = Path.GetFileName(_fileToEncrypt.TrimEnd(Path.DirectorySeparatorChar));
+            if (Program.doEncryptFile) fileName.Text = _fileToEncrypt.getFileName();
+            else if (Program.doEncryptFolder) fileName.Text = _fileToEncrypt.getFileName().TrimEnd(Path.DirectorySeparatorChar);
             this.Focus();
             this.ActiveControl = passwordInput;
             _autoPassword = password;
@@ -49,7 +50,7 @@ namespace FileAES
             }
         }
 
-        private void setNoteLabel(string note, int severity)
+        private void SetNote(string note, int severity)
         {
             if (note.Contains("ERROR:"))
             {
@@ -58,10 +59,21 @@ namespace FileAES
             }
             else
             {
-                if (severity == 1) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
-                else if (severity == 2) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
-                else if (severity == 3) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
-                else noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+                switch (severity)
+                {
+                    case 1:
+                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
+                        break;
+                    case 2:
+                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
+                        break;
+                    case 3:
+                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
+                        break;
+                    default:
+                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+                        break;
+                }
             }
         }
 
@@ -70,10 +82,10 @@ namespace FileAES
             if (encryptButton.Enabled)
             {
                 _progress = 0;
-                if (Core.isEncryptFileValid(_fileToEncrypt) && !_inProgress && passwordInputConf.Text == passwordInput.Text) backgroundEncrypt.RunWorkerAsync();
-                else if (passwordInputConf.Text != passwordInput.Text) setNoteLabel("Passwords do not match!", 2);
-                else if (_inProgress) setNoteLabel("Encryption already in progress.", 1);
-                else setNoteLabel("Encryption Failed. Try again later.", 1);
+                if (_fileToEncrypt.isFileEncryptable() && !_inProgress && passwordInputConf.Text == passwordInput.Text) backgroundEncrypt.RunWorkerAsync();
+                else if (passwordInputConf.Text != passwordInput.Text) SetNote("Passwords do not match!", 2);
+                else if (_inProgress) SetNote("Encryption already in progress.", 1);
+                else SetNote("Encryption Failed. Try again later.", 1);
 
                 runtime_Tick(sender, e);
             }
@@ -83,14 +95,14 @@ namespace FileAES
         {
             try
             {
-                setNoteLabel("Encrypting... Please wait.", 0);
+                SetNote("Encrypting... Please wait.", 0);
 
                 _inProgress = true;
                 _encryptSuccessful = false;
 
                 while (!backgroundEncrypt.CancellationPending)
                 {
-                    FAES.FileAES_Encrypt encrypt = new FAES.FileAES_Encrypt(new FAES_File(_fileToEncrypt), passwordInput.Text, hintInput.Text);
+                    FAES.FileAES_Encrypt encrypt = new FAES.FileAES_Encrypt(_fileToEncrypt, passwordInput.Text, hintInput.Text);
 
                     encrypt.SetCompressionMode(FAES.Packaging.CompressionUtils.GetAllOptimiseModes()[compressMode.SelectedIndex]);
 
@@ -110,7 +122,7 @@ namespace FileAES
             }
             catch (Exception e)
             {
-                setNoteLabel(FileAES_Utilities.FAES_ExceptionHandling(e), 3);
+                SetNote(FileAES_Utilities.FAES_ExceptionHandling(e), 3);
             }
         }
 
@@ -139,7 +151,7 @@ namespace FileAES
 
             if (_encryptSuccessful)
             {
-                setNoteLabel("Done!", 0);
+                SetNote("Done!", 0);
                 Application.Exit();
             }
         }
@@ -168,7 +180,7 @@ namespace FileAES
                     progressBar.Value = 100;
                 }
             }
-            else if (Core.isEncryptFileValid(_fileToEncrypt) && passwordInput.Text.Length > 3 && passwordInputConf.Text.Length > 3 && !_inProgress)
+            else if (_fileToEncrypt.isFileEncryptable() && passwordInput.Text.Length > 3 && passwordInputConf.Text.Length > 3 && !_inProgress)
             {
                 encryptButton.Enabled = true;
                 passwordInput.Enabled = true;
@@ -206,19 +218,6 @@ namespace FileAES
                     backgroundEncrypt.CancelAsync();
                     try
                     {
-                        if (Program.doEncryptFile)
-                        {
-                            if (File.Exists(Path.Combine(Path.GetDirectoryName(_fileToEncrypt), fileName.Text) + ".faeszip")) File.Delete(Path.Combine(Path.GetDirectoryName(_fileToEncrypt), fileName.Text) + FileAES_Utilities.ExtentionUFAES);
-                            if (File.Exists(Path.Combine(Path.GetDirectoryName(_fileToEncrypt), fileName.Text) + ".faeszip")) File.Delete(Path.Combine(Path.GetDirectoryName(_fileToEncrypt), fileName.Text) + FileAES_Utilities.ExtentionUFAES);
-                        }
-                        else if (Program.doEncryptFolder)
-                        {
-                            if (File.Exists(Path.Combine(Directory.GetParent(_fileToEncrypt).FullName, fileName.Text) + ".faeszip")) File.Delete(Path.Combine(Directory.GetParent(_fileToEncrypt).FullName, fileName.Text) + FileAES_Utilities.ExtentionUFAES);
-                            if (File.Exists(Path.Combine(Directory.GetParent(_fileToEncrypt).FullName, fileName.Text) + ".faeszip")) File.Delete(Path.Combine(Directory.GetParent(_fileToEncrypt).FullName, fileName.Text) + FileAES_Utilities.ExtentionUFAES);
-
-                            if (!core.IsDirectoryEmpty(Path.Combine(Program.tempPathInstance))) Directory.Delete(Path.Combine(Program.tempPathInstance), true);
-                        }
-
                         FileAES_Utilities.PurgeInstancedTempFolders();
                     }
                     catch (Exception)
@@ -230,8 +229,7 @@ namespace FileAES
                 else e.Cancel = true;
                 update.Dispose();
             }
-            else
-                Directory.Delete(Program.tempPathInstance, true);
+            else FileAES_Utilities.PurgeInstancedTempFolders();
         }
 
         private void versionLabel_Click(object sender, EventArgs e)

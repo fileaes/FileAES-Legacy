@@ -37,7 +37,7 @@ namespace FileAES
             {
                 param[i].ToLower();
 
-                if (File.Exists(param[i]) && Core.isValidFiletype(Path.GetExtension(param[i])) && !doEncryptFile && !doEncryptFolder)
+                if (File.Exists(param[i]) && FileAES_Utilities.isFileDecryptable(param[i]) && !doEncryptFile && !doEncryptFolder)
                 {
                     doDecrypt = true;
                     fileName = param[i];

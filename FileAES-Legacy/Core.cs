@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FAES;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -9,25 +10,6 @@ class Core
 {
     private const bool _flagIsDevBuild = true;
     private const string _copyrightInfo = "mullak99 © 2019";
-
-    public static bool isEncryptFileValid(string path)
-    {
-        if (!String.IsNullOrEmpty(path) && !String.IsNullOrEmpty(path) && !String.IsNullOrEmpty(path) && (File.Exists(path) || Directory.Exists(path))) return true;
-        else return false;
-    }
-
-    public static bool isDecryptFileValid(string path)
-    {
-        if (!String.IsNullOrEmpty(path) && File.Exists(path) && !String.IsNullOrEmpty(path) && isValidFiletype(path)) return true;
-        else return false;
-    }
-
-    public static bool isValidFiletype(string path)
-    {
-        if (Path.GetExtension(path) == ".faes") return true;
-        if (Path.GetExtension(path) == ".mcrypt") return true;
-        else return false;
-    }
 
     DateTime buildDate = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
 
@@ -59,11 +41,6 @@ class Core
     public string getCopyrightInfo()
     {
         return _copyrightInfo;
-    }
-
-    public bool IsDirectoryEmpty(string path)
-    {
-        return !Directory.EnumerateFiles(path).Any();
     }
 
     public void setIgnoreUpdate(bool state)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using FAES;
@@ -14,17 +13,18 @@ namespace FileAES
 
         private bool _inProgress = false;
         private bool _decryptSuccessful;
-        private string _fileToDecrypt, _autoPassword;
+        private FAES_File _fileToDecrypt;
+        private string _autoPassword;
         private decimal _progress = 0;
 
         public FileAES_Decrypt(string file, string password = null)
         {
-            if (!String.IsNullOrEmpty(file)) _fileToDecrypt = file;
+            if (!String.IsNullOrEmpty(file)) _fileToDecrypt = new FAES_File(file);
             else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.getVersionInfo();
             copyrightLabel.Text = core.getCopyrightInfo();
-            if (Program.doDecrypt) fileName.Text = Path.GetFileName(_fileToDecrypt);
+            if (Program.doDecrypt) fileName.Text = _fileToDecrypt.getFileName();
             this.Focus();
             this.ActiveControl = passwordInput;
             _autoPassword = password;
@@ -36,7 +36,7 @@ namespace FileAES
         private void FileAES_Decrypt_Load(object sender, EventArgs e)
         {
             update.checkForUpdate();
-            hintTextbox.Text = FileAES_Utilities.GetPasswordHint(_fileToDecrypt);
+            hintTextbox.Text = _fileToDecrypt.GetPasswordHint();
 
             if (_autoPassword != null && _autoPassword.Length > 3)
             {
@@ -51,15 +51,15 @@ namespace FileAES
             if (decryptButton.Enabled)
             {
                 _progress = 0;
-                if (Core.isDecryptFileValid(_fileToDecrypt) && !_inProgress) backgroundDecrypt.RunWorkerAsync();
-                else if (_inProgress) setNoteLabel("Decryption already in progress.", 1);
-                else setNoteLabel("Decryption Failed. Try again later.", 1);
+                if (_fileToDecrypt.isFileDecryptable() && !_inProgress) backgroundDecrypt.RunWorkerAsync();
+                else if (_inProgress) SetNote("Decryption already in progress.", 1);
+                else SetNote("Decryption Failed. Try again later.", 1);
 
                 runtime_Tick(sender, e);
             }
         }
 
-        private void setNoteLabel(string note, int severity)
+        private void SetNote(string note, int severity)
         {
             if (note.Contains("ERROR:"))
             {
@@ -68,25 +68,36 @@ namespace FileAES
             }
             else
             {
-                if (severity == 1) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
-                else if (severity == 2) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
-                else if (severity == 3) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
-                else noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+                switch (severity)
+                {
+                    case 1:
+                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
+                        break;
+                    case 2:
+                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
+                        break;
+                    case 3:
+                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
+                        break;
+                    default:
+                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+                        break;
+                }
             }
         }
 
-        private void doDecrypt()
+        private void Decrypt()
         {
             try
             {
-                setNoteLabel("Decrypting... Please wait.", 0);
+                SetNote("Decrypting... Please wait.", 0);
 
                 _inProgress = true;
                 _decryptSuccessful = false;
 
                 while (!backgroundDecrypt.CancellationPending)
                 {
-                    FAES.FileAES_Decrypt decrypt = new FAES.FileAES_Decrypt(new FAES_File(_fileToDecrypt), passwordInput.Text);
+                    FAES.FileAES_Decrypt decrypt = new FAES.FileAES_Decrypt(_fileToDecrypt, passwordInput.Text);
 
                     Thread dThread = new Thread(() =>
                     {
@@ -104,13 +115,13 @@ namespace FileAES
             }
             catch (Exception e)
             {
-                setNoteLabel(FileAES_Utilities.FAES_ExceptionHandling(e), 3);
+                SetNote(FileAES_Utilities.FAES_ExceptionHandling(e), 3);
             }
         }
 
         private void backgroundDecrypt_DoWork(object sender, DoWorkEventArgs e)
         {
-            doDecrypt();
+            Decrypt();
         }
 
         private void backgroundDecrypt_Complete(object sender, RunWorkerCompletedEventArgs e)
@@ -119,7 +130,7 @@ namespace FileAES
             if (_decryptSuccessful) Application.Exit();
             else
             {
-                setNoteLabel("Password Incorrect!", 3);
+                SetNote("Password Incorrect!", 3);
                 progressBar.CustomText = "Password Incorrect!";
                 progressBar.VisualMode = ProgressBarDisplayMode.TextAndPercentage;
             }
@@ -146,7 +157,7 @@ namespace FileAES
                     progressBar.Value = 100;
                 }
             }
-            else if (Core.isDecryptFileValid(_fileToDecrypt) && passwordInput.Text.Length > 3 && !_inProgress)
+            else if (_fileToDecrypt.isFileDecryptable() && passwordInput.Text.Length > 3 && !_inProgress)
             {
                 decryptButton.Enabled = true;
                 passwordInput.Enabled = true;
@@ -178,10 +189,6 @@ namespace FileAES
                     backgroundDecrypt.CancelAsync();
                     try
                     {
-                        if (File.Exists(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + FileAES_Utilities.ExtentionUFAES)))
-                            File.Delete(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + FileAES_Utilities.ExtentionUFAES));
-
-
                         FileAES_Utilities.PurgeInstancedTempFolders();
                     }
                     catch (Exception)

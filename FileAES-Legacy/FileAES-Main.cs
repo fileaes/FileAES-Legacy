@@ -1,13 +1,6 @@
 ﻿using FAES;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FileAES
@@ -71,7 +64,7 @@ namespace FileAES
 
         private void encryptFileDrop_Click(object sender, EventArgs e)
         {
-            var fileToEncrypt = "";
+            string fileToEncrypt = "";
             if (openFileToEncrypt.ShowDialog() == DialogResult.OK)
             {
                 fileToEncrypt = openFileToEncrypt.FileName;
@@ -91,7 +84,7 @@ namespace FileAES
             string[] FileList = (string[])e.Data.GetData(DataFormats.FileDrop, false);
 
             if (FileList.Length > 1) MessageBox.Show("You may only decrypt a single file at a time.", "Multiple Files Unsupported");
-            else if (!Core.isValidFiletype(FileList[0])) MessageBox.Show("Please select a valid filetype.", "Invalid Filetype");
+            else if (!FileAES_Utilities.isFileDecryptable(FileList[0])) MessageBox.Show("Please select a valid filetype.", "Invalid Filetype");
             else
             {
                 Program.doDecrypt = true;
@@ -106,10 +99,10 @@ namespace FileAES
 
         private void decryptFileDrop_Click(object sender, EventArgs e)
         {
-            var fileToDecrypt = "";
+            string fileToDecrypt = "";
             if (openFileToDecrypt.ShowDialog() == DialogResult.OK)
             {
-                if (!Core.isValidFiletype(openFileToDecrypt.FileName)) MessageBox.Show("Please select a valid filetype.", "Invalid Filetype");
+                if (!FileAES_Utilities.isFileDecryptable(openFileToDecrypt.FileName)) MessageBox.Show("Please select a valid filetype.", "Invalid Filetype");
                 else
                 {
                     fileToDecrypt = openFileToDecrypt.FileName;
