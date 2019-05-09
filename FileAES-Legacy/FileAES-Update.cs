@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -11,17 +8,21 @@ using System.Net;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FileAES
 {
     public partial class FileAES_Update : Form
     {
-        Core core = new Core();
+        static Core core = new Core();
+
+        private static string CheckUpdateURL = String.Format("https://api.mullak99.co.uk/FAES/IsUpdate.php?app=faes_legacy&branch={0}&showver=true&version={1}", Program.getBranch(), core.getVersionInfo(false, true, false));
+        private static string DownloadLatestURL = String.Format("https://api.mullak99.co.uk/FAES/GetDownload.php?app=faes_legacy&ver=latest&branch={0}", Program.getBranch());
 
         public FileAES_Update()
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+
             InitializeComponent();
             checkForUpdate();
             FaesVersion.Text = "FAES Version: " + FAES.FileAES_Utilities.GetVersion();
@@ -30,7 +31,7 @@ namespace FileAES
 
         private void updateCurrentVersion()
         {
-            currentVerLabel.Text = "Current Version: " + core.getVersionInfo(false, true);
+            currentVerLabel.Text = "Current Version: " + core.getVersionInfo(false, true, true);
         }
 
         private string getLatestVersion()
@@ -38,12 +39,12 @@ namespace FileAES
             try
             {
                 WebClient client = new WebClient();
-                byte[] html = client.DownloadData("http://builds.mullak99.co.uk/FileAES/checkupdate.php?branch=" + Program.getBranch());
+                byte[] html = client.DownloadData(CheckUpdateURL);
                 UTF8Encoding utf = new UTF8Encoding();
                 if (String.IsNullOrEmpty(utf.GetString(html)) || utf.GetString(html) == "null")
                     return "0.0.0.0";
                 else
-                    return utf.GetString(html);
+                    return convertNewVerToOld(utf.GetString(html).TrimStart('v', 'V'));
             }
             catch (Exception)
             {
@@ -58,16 +59,34 @@ namespace FileAES
                 bool isCurrentDevBuild = false;
                 Int64 latestSubVersion, currentSubVersion;
                 if (getLatestVersion().Contains("DEV")) isLatestDevBuild = true;
-                string latestVerStripped = getLatestVersion();
-                if (core.getVersionInfo(false, true).Contains("DEV"))
-                {
-                    isCurrentDevBuild = true;
-                    latestVerStripped = latestVerStripped.Substring(0, latestVerStripped.LastIndexOf("-"));
-                    latestVerStripped = latestVerStripped.Replace("v", "");
-                }
+                string latestVer = getLatestVersion();
+                string currentVer = core.getVersionInfo();
+                string latestVerStripped = latestVer;
+                Int64 latestVerDevBuildNo = -1;
+                Int64 currentVerDevBuildNo = -1;
+
                 if (isLatestDevBuild) latestSubVersion = Convert.ToInt64(getLatestVersion().Substring(getLatestVersion().LastIndexOf("V") + 1));
                 else latestSubVersion = 0;
-                if (isCurrentDevBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true).Substring(core.getVersionInfo(false, true).LastIndexOf("V") + 1));
+                if (isCurrentDevBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true, false).Substring(core.getVersionInfo(false, true, false).LastIndexOf("V") + 1));
+                else currentSubVersion = 0;
+
+                if (latestVer.Contains("DEV") || latestVer.Contains("BETA"))
+                {
+                    isLatestDevBuild = true;
+                    latestVerStripped = latestVerStripped.Split('-')[0];
+                    latestVerStripped = latestVerStripped.TrimStart('v', 'V');
+                    latestVerDevBuildNo = Convert.ToInt64(latestVer.Split('-')[1].Replace("DEV", "").Replace("BETA", "").Replace("_", ""));
+                }
+
+                if (currentVer.Contains("DEV") || currentVer.Contains("BETA"))
+                {
+                    isCurrentDevBuild = true;
+                    currentVerDevBuildNo = Convert.ToInt64(currentVer.Split('-')[1].Replace("DEV", "").Replace("BETA", "").Replace("_", ""));
+                }
+
+                if (isLatestDevBuild) latestSubVersion = Convert.ToInt64(getLatestVersion().Substring(getLatestVersion().LastIndexOf("V") + 1));
+                else latestSubVersion = 0;
+                if (isCurrentDevBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true, false).Substring(core.getVersionInfo(false, true, false).LastIndexOf("V") + 1));
                 else currentSubVersion = 0;
 
                 int[] latestServerVer = ToIntArray(latestVerStripped, '.');
@@ -83,10 +102,15 @@ namespace FileAES
                     return true;
                 else if (latestServerVer[3] > currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
                     return true;
-                else if ((isLatestDevBuild && isCurrentDevBuild) && latestSubVersion > currentSubVersion && latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else
-                    return false;
+                else if (isLatestDevBuild && isCurrentDevBuild)
+                {
+                    if ((latestVerDevBuildNo != -1 && currentVerDevBuildNo != -1) &&
+                        (latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0] && latestVerDevBuildNo > currentVerDevBuildNo))
+                        return true;
+                    else if (latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
+                        return true;
+                }
+                return false;
             }
             catch
             {
@@ -102,16 +126,29 @@ namespace FileAES
                 bool isCurrentDevBuild = false;
                 Int64 latestSubVersion, currentSubVersion;
                 if (getLatestVersion().Contains("DEV")) isLatestDevBuild = true;
-                string latestVerStripped = getLatestVersion();
-                if (core.getVersionInfo(false, true).Contains("DEV"))
+                string latestVer = getLatestVersion();
+                string currentVer = core.getVersionInfo();
+                string latestVerStripped = latestVer;
+                Int64 latestVerDevBuildNo = -1;
+                Int64 currentVerDevBuildNo = -1;
+
+                if (latestVer.Contains("DEV") || latestVer.Contains("BETA"))
+                {
+                    isLatestDevBuild = true;
+                    latestVerStripped = latestVerStripped.Split('-')[0];
+                    latestVerStripped = latestVerStripped.TrimStart('v', 'V');
+                    latestVerDevBuildNo = Convert.ToInt64(latestVer.Split('-')[1].Replace("DEV", "").Replace("BETA", "").Replace("_", ""));
+                }
+
+                if (currentVer.Contains("DEV") || currentVer.Contains("BETA"))
                 {
                     isCurrentDevBuild = true;
-                    latestVerStripped = latestVerStripped.Substring(0, latestVerStripped.LastIndexOf("-"));
-                    latestVerStripped = latestVerStripped.Replace("v", "");
+                    currentVerDevBuildNo = Convert.ToInt64(currentVer.Split('-')[1].Replace("DEV", "").Replace("BETA", "").Replace("_", ""));
                 }
+
                 if (isLatestDevBuild) latestSubVersion = Convert.ToInt64(getLatestVersion().Substring(getLatestVersion().LastIndexOf("V") + 1));
                 else latestSubVersion = 0;
-                if (isCurrentDevBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true).Substring(core.getVersionInfo(false, true).LastIndexOf("V") + 1));
+                if (isCurrentDevBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true, false).Substring(core.getVersionInfo(false, true, false).LastIndexOf("V") + 1));
                 else currentSubVersion = 0;
 
                 int[] latestServerVer = ToIntArray(latestVerStripped, '.');
@@ -125,16 +162,22 @@ namespace FileAES
                     return true;
                 else if (latestServerVer[3] < currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
                     return true;
-                else if ((isLatestDevBuild && isCurrentDevBuild) && latestSubVersion < currentSubVersion && latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else
-                    return false;
+                else if (isLatestDevBuild && isCurrentDevBuild)
+                {
+                    if ((latestVerDevBuildNo != -1 && currentVerDevBuildNo != -1) &&
+                        (latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0] && latestVerDevBuildNo < currentVerDevBuildNo))
+                        return true;
+                    else if (latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
+                        return true;
+                }
+                return false;
             }
             catch
             {
                 return false;
             }
         }
+
         public string detailedUpdateInfo()
         {
             if (isUpdateAvailable())
@@ -151,43 +194,98 @@ namespace FileAES
         {
             updateCurrentVersion();
 
-            if (detailedUpdateInfo() == "LATESTVERSION")
+            checkForUpdateButton.Enabled = false;
+            updateButton.Visible = false;
+            updateButton.Enabled = false;
+            neverRemindButton.Visible = false;
+            neverRemindButton.Enabled = false;
+            descLabel.Text = "Checking for updates...";
+            latestVerLabel.Text = "Latest Version: Checking...";
+
+            Thread threaddedUpdateCheck = new Thread(() =>
+            {             
+                if (detailedUpdateInfo() == "LATESTVERSION")
+                {
+                    string latestVersion = convertOldVerToNew(getLatestVersion(), false);
+                    descLabel.Text = "You are on the latest version!";
+                    updateButton.Visible = false;
+                    updateButton.Enabled = false;
+                    neverRemindButton.Visible = false;
+                    neverRemindButton.Enabled = false;
+                    latestVerLabel.Text = "Latest Version: " + latestVersion;
+                }
+                else if (detailedUpdateInfo() == "APPNEWER")
+                {
+                    string latestVersion = convertOldVerToNew(getLatestVersion(), false);
+                    descLabel.Text = "You are on a private build.";
+                    updateButton.Visible = false;
+                    updateButton.Enabled = false;
+                    neverRemindButton.Visible = false;
+                    neverRemindButton.Enabled = false;
+                    latestVerLabel.Text = "Latest Version: " + latestVersion;
+                }
+                else if (detailedUpdateInfo() == "SERVERERROR")
+                {
+                    descLabel.Text = "Unable to connect to the update server.";
+                    updateButton.Visible = false;
+                    updateButton.Enabled = false;
+                    neverRemindButton.Visible = false;
+                    neverRemindButton.Enabled = false;
+                    latestVerLabel.Text = "Latest Version: SERVER ERROR!";
+                }
+                else
+                {
+                    string latestVersion = convertOldVerToNew(getLatestVersion(), false);
+                    descLabel.Text = "An update is available!";
+                    updateButton.Visible = true;
+                    updateButton.Enabled = true;
+                    neverRemindButton.Visible = true;
+                    neverRemindButton.Enabled = true;
+                    if (!Program.getSkipUpdate()) this.Show();
+                    latestVerLabel.Text = "Latest Version: " + latestVersion;
+                }
+            });
+            threaddedUpdateCheck.Start();
+
+            checkForUpdateButton.Enabled = true;
+        }
+
+        private string convertNewVerToOld(string newVersionFormat, bool trimV = true)
+        {
+            string rawString = newVersionFormat;
+            if (trimV) rawString = rawString.TrimStart('v', 'V');
+            else if (rawString[0] != 'v') rawString = "v" + rawString;
+
+            if (rawString.Count(c => c == '.') == 2)
             {
-                descLabel.Text = "You are on the latest version!";
-                updateButton.Visible = false;
-                updateButton.Enabled = false;
-                neverRemindButton.Visible = false;
-                neverRemindButton.Enabled = false;
-                latestVerLabel.Text = "Latest Version: v" + getLatestVersion();
+                List<string> verTagSplit = rawString.Split('-').ToList();
+                List<string> verSplit = verTagSplit[0].Split('.').ToList();
+
+                if (verSplit.Count == 3) verSplit.Add("0");
+                verTagSplit[0] = String.Join(".", verSplit.ToArray());
+
+                return String.Join("-", verTagSplit.ToArray());
             }
-            else if (detailedUpdateInfo() == "APPNEWER")
+            else return rawString;
+        }
+
+        private string convertOldVerToNew(string oldVersionFormat, bool trimV = true)
+        {
+            string rawString = oldVersionFormat;
+            if (trimV) rawString = rawString.TrimStart('v', 'V');
+            else if (rawString[0] != 'v') rawString = "v" + rawString;
+
+            if (rawString.Count(c => c == '.') == 3)
             {
-                descLabel.Text = "You are on a private build.";
-                updateButton.Visible = false;
-                updateButton.Enabled = false;
-                neverRemindButton.Visible = false;
-                neverRemindButton.Enabled = false;
-                latestVerLabel.Text = "Latest Version: v" + getLatestVersion();
+                List<string> verTagSplit = rawString.Split('-').ToList();
+                List<string> verSplit = verTagSplit[0].Split('.').ToList();
+
+                if (verSplit.Count == 4) verSplit.RemoveAt(verSplit.Count - 1);
+                verTagSplit[0] = String.Join(".", verSplit.ToArray());
+
+                return String.Join("-", verTagSplit.ToArray());
             }
-            else if (detailedUpdateInfo() == "SERVERERROR")
-            {
-                descLabel.Text = "Unable to connect to the update server.";
-                updateButton.Visible = false;
-                updateButton.Enabled = false;
-                neverRemindButton.Visible = false;
-                neverRemindButton.Enabled = false;
-                latestVerLabel.Text = "Latest Version: SERVER ERROR!";
-            }
-            else
-            {
-                descLabel.Text = "An update is available!";
-                updateButton.Visible = true;
-                updateButton.Enabled = true;
-                neverRemindButton.Visible = true;
-                neverRemindButton.Enabled = true;
-                if (!Program.getSkipUpdate()) this.Show();
-                latestVerLabel.Text = "Latest Version: v" + getLatestVersion();
-            }
+            else return rawString;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -217,9 +315,7 @@ namespace FileAES
 
         private void checkForUpdateButton_Click(object sender, EventArgs e)
         {
-            checkForUpdateButton.Enabled = false;
             checkForUpdate();
-            checkForUpdateButton.Enabled = true;
         }
 
         public static void selfUpdate(bool doCleanUpdate = false)
@@ -232,7 +328,7 @@ namespace FileAES
                     File.Delete(Path.Combine(installDir, "FAES-Updater.exe"));
                     File.Delete(Path.Combine(installDir, "updater.pack"));
                     WebClient webClient = new WebClient();
-                    webClient.DownloadFile(new Uri("http://builds.mullak99.co.uk/FileAES/updater/latest"), Path.Combine(installDir, "updater.pack"));
+                    webClient.DownloadFile(new Uri(DownloadLatestURL), Path.Combine(installDir, "updater.pack"));
                     ZipFile.ExtractToDirectory(Path.Combine(installDir, "updater.pack"), Directory.GetCurrentDirectory() + "..");
                     File.Delete(Path.Combine(installDir, "updater.pack"));
                     Thread.Sleep(100);

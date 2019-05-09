@@ -28,7 +28,7 @@ namespace FileAES
             tempPathInstance = Path.Combine(Path.GetTempPath(), "FileAES");
             List<string> arguments = new List<string>();
             arguments.AddRange(args);
-            if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES\config\launchParams.cfg"))) arguments.AddRange(readLaunchParams());
+            if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES-Legacy\config\launchParams.cfg"))) arguments.AddRange(readLaunchParams());
             if (File.Exists(@"Config\launchParams.cfg")) arguments.AddRange(readLaunchParams(true));
 
             string[] param = arguments.ToArray();
@@ -80,9 +80,10 @@ namespace FileAES
             if (local)
                 dir = Path.Combine(Directory.GetCurrentDirectory(), @"config\launchParams.cfg");
             else
-                dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES\config\launchParams.cfg");
+                dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES-Legacy\config\launchParams.cfg");
 
-            return File.ReadAllLines(dir);
+            if (File.Exists(dir)) return File.ReadAllLines(dir);
+            else return null;
         }
 
         public static string getBranch()

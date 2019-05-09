@@ -23,17 +23,24 @@ class Core
         return this.GetType().Assembly.GetCustomAttributes(false).OfType<DebuggableAttribute>().Select(da => da.IsJITTrackingEnabled).FirstOrDefault();
     }
 
-    public string getVersionInfo(bool raw = false, bool formatted = false)
+    public string getVersionInfo(bool raw = false, bool formatted = false, bool trimRev = true)
     {
+        string version = Application.ProductVersion;
+
+        if (trimRev)
+        {
+            string[] verSplit = version.Split('.');
+            version = verSplit[0] + "." + verSplit[1] + "." + verSplit[2];
+        }
         if (formatted)
         {
-            if (isDebugBuild() || _flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
-            else return "v" + Application.ProductVersion;
+            if (isDebugBuild() || _flagIsDevBuild) return "v" + version + "-DEV" + buildHash();
+            else return "v" + version;
         }
         if (!raw)
         {
-            if (isDebugBuild() || _flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
-            else return "v" + Application.ProductVersion;
+            if (isDebugBuild() || _flagIsDevBuild) return "v" + version + "-DEV" + buildHash();
+            else return "v" + version;
         }
         else return Application.ProductVersion;
     }
