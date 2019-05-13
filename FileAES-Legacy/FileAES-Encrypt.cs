@@ -24,7 +24,7 @@ namespace FileAES
             if (!String.IsNullOrEmpty(file)) _fileToEncrypt = new FAES_File(file);
             else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
-            versionLabel.Text = core.getVersionInfo();
+            versionLabel.Text = core.GetVersionInfo();
             copyrightLabel.Text = core.getCopyrightInfo();
             populateCompressionModes();
             if (Program.doEncryptFile) fileName.Text = _fileToEncrypt.getFileName();
@@ -39,7 +39,7 @@ namespace FileAES
 
         private void FileAES_Encrypt_Load(object sender, EventArgs e)
         {
-            update.checkForUpdate();
+            update.CheckForUpdate();
 
             if (_autoPassword != null && _autoPassword.Length > 3)
             {
@@ -91,7 +91,7 @@ namespace FileAES
             }
         }
 
-        private void doEncrypt()
+        private void Encrypt()
         {
             try
             {
@@ -142,7 +142,7 @@ namespace FileAES
 
         private void backgroundEncrypt_DoWork(object sender, DoWorkEventArgs e)
         {
-            doEncrypt();
+            Encrypt();
         }
 
         private void backgroundEncrypt_Complete(object sender, RunWorkerCompletedEventArgs e)

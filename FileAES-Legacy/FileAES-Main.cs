@@ -13,13 +13,13 @@ namespace FileAES
         public FileAES_Main()
         {
             InitializeComponent();
-            versionLabel.Text = core.getVersionInfo();
+            versionLabel.Text = core.GetVersionInfo();
             copyrightLabel.Text = core.getCopyrightInfo();
         }
 
         private void FileAES_Main_Load(object sender, EventArgs e)
         {
-            update.checkForUpdate();
+            update.CheckForUpdate();
         }
 
         private void encryptFileDrop_DragEnter(object sender, DragEventArgs e)

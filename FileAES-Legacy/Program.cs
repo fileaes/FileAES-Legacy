@@ -18,8 +18,8 @@ namespace FileAES
         private static bool _fullInstall = false;
         private static bool _cleanUpdates = false;
         private static bool _purgeTemp = false;
+        private static bool _debugMode = false;
         private static string branch = "";
-        private static string _launchTimeStamp = DateTime.Now.ToString("yyyyMMddHHmmssffffff");
         private static string _autoPassword = null;
 
         [STAThread]
@@ -28,8 +28,8 @@ namespace FileAES
             tempPathInstance = Path.Combine(Path.GetTempPath(), "FileAES");
             List<string> arguments = new List<string>();
             arguments.AddRange(args);
-            if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES-Legacy\config\launchParams.cfg"))) arguments.AddRange(readLaunchParams());
-            if (File.Exists(@"Config\launchParams.cfg")) arguments.AddRange(readLaunchParams(true));
+            if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES-Legacy\config\launchParams.cfg"))) arguments.AddRange(ReadLaunchParams());
+            if (File.Exists(@"Config\launchParams.cfg")) arguments.AddRange(ReadLaunchParams(true));
 
             string[] param = arguments.ToArray();
 
@@ -58,13 +58,15 @@ namespace FileAES
                 else if (param[i] == "--stable") branch = "stable";
                 else if (param[i] == "--skipupdate" || param[i] == "-skipupdate") _skipUpdate = true;
                 else if (param[i].Equals("-cleanupdates") || param[i].Equals("--cleanupdates") || param[i].Equals("-c") || param[i].Equals("--c")) _cleanUpdates = true;
-                else if (param[i].Equals("-update") || param[i].Equals("--update") || param[i].Equals("-u") || param[i].Equals("--u")) FileAES_Update.selfUpdate(_cleanUpdates);
+                else if (param[i].Equals("-update") || param[i].Equals("--update") || param[i].Equals("-u") || param[i].Equals("--u")) FileAES_Update.UpdateSelf(_cleanUpdates);
                 else if (param[i].Equals("-password") || param[i].Equals("--password") || param[i].Equals("-p") || param[i].Equals("--p") && !String.IsNullOrEmpty(param[i + 1])) _autoPassword = param[i + 1];
                 else if (param[i].Equals("-purgetemp") || param[i].Equals("--purgetemp") || param[i].Equals("-deletetemp") || param[i].Equals("--deletetemp")) _purgeTemp = true;
+                else if (param[i].Equals("-debug") || param[i].Equals("--debug") || param[i].Equals("-developer") || param[i].Equals("--developer")) _debugMode = true;
             }
             if (String.IsNullOrEmpty(branch)) branch = "stable";
 
             if (_purgeTemp) FileAES_Utilities.PurgeTempFolder();
+            if (File.Exists("FAES-Updater.exe")) File.Delete("FAES-Updater.exe");
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -74,7 +76,7 @@ namespace FileAES
 
         }
 
-        public static string[] readLaunchParams(bool local = false)
+        public static string[] ReadLaunchParams(bool local = false)
         {
             string dir;
             if (local)
@@ -86,24 +88,29 @@ namespace FileAES
             else return null;
         }
 
-        public static string getBranch()
+        public static string GetBranch()
         {
             return branch;
         }
 
-        public static bool getCleanUpdates()
+        public static bool GetCleanUpdates()
         {
             return _cleanUpdates;
         }
 
-        public static bool getFullInstall()
+        public static bool GetFullInstall()
         {
             return _fullInstall;
         }
 
-        public static bool getSkipUpdate()
+        public static bool GetSkipUpdate()
         {
             return _skipUpdate;
+        }
+
+        public static bool GetDeveloperMode()
+        {
+            return _debugMode;
         }
     }
 }

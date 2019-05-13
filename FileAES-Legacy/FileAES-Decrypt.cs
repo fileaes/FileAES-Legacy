@@ -22,7 +22,7 @@ namespace FileAES
             if (!String.IsNullOrEmpty(file)) _fileToDecrypt = new FAES_File(file);
             else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
-            versionLabel.Text = core.getVersionInfo();
+            versionLabel.Text = core.GetVersionInfo();
             copyrightLabel.Text = core.getCopyrightInfo();
             if (Program.doDecrypt) fileName.Text = _fileToDecrypt.getFileName();
             this.Focus();
@@ -35,7 +35,7 @@ namespace FileAES
 
         private void FileAES_Decrypt_Load(object sender, EventArgs e)
         {
-            update.checkForUpdate();
+            update.CheckForUpdate();
             hintTextbox.Text = _fileToDecrypt.GetPasswordHint();
 
             if (_autoPassword != null && _autoPassword.Length > 3)

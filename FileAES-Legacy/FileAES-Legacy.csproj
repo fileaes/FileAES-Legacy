@@ -7,7 +7,7 @@
     <ProjectGuid>{EB18B785-8D8F-4446-B9DA-3F9505CF580F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>FileAES</RootNamespace>
-    <AssemblyName>FileAES</AssemblyName>
+    <AssemblyName>FileAES_Legacy</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>

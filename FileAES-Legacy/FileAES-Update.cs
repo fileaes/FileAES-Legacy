@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
 using System.Security.Principal;
 using System.Text;
@@ -14,330 +12,217 @@ namespace FileAES
 {
     public partial class FileAES_Update : Form
     {
-        static Core core = new Core();
+        private UpdateStatus _appUpdateStatus;
+        private string _latestVersion;
+        private bool _updateThreadRunning = false;
+        private bool _updateUI = false;
 
-        private static string CheckUpdateURL = String.Format("https://api.mullak99.co.uk/FAES/IsUpdate.php?app=faes_legacy&branch={0}&showver=true&version={1}", Program.getBranch(), core.getVersionInfo(false, true, false));
-        private static string DownloadLatestURL = String.Format("https://api.mullak99.co.uk/FAES/GetDownload.php?app=faes_legacy&ver=latest&branch={0}", Program.getBranch());
+        private static Core core = new Core();
 
         public FileAES_Update()
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
             InitializeComponent();
-            checkForUpdate();
+            CheckForUpdate();
             FaesVersion.Text = "FAES Version: " + FAES.FileAES_Utilities.GetVersion();
             copyrightLabel.Text = core.getCopyrightInfo();
+
+            if (Program.GetDeveloperMode()) devToolStripMenuItem.Visible = true;
         }
 
-        private void updateCurrentVersion()
+        public enum UpdateStatus
         {
-            currentVerLabel.Text = "Current Version: " + core.getVersionInfo(false, true, true);
-        }
+            ServerError,
+            AppOutdated,
+            AppLatest,
+            AppNewer
+        };
 
-        private string getLatestVersion()
+        private string GetLatestVersion()
         {
             try
             {
                 WebClient client = new WebClient();
-                byte[] html = client.DownloadData(CheckUpdateURL);
+                byte[] html = client.DownloadData(String.Format("https://api.mullak99.co.uk/FAES/IsUpdate.php?app=faes_legacy&branch={0}&showver=true&version={1}", Program.GetBranch(), core.GetVersionInfo(false, true, false)));
                 UTF8Encoding utf = new UTF8Encoding();
                 if (String.IsNullOrEmpty(utf.GetString(html)) || utf.GetString(html) == "null")
                     return "0.0.0.0";
                 else
-                    return convertNewVerToOld(utf.GetString(html).TrimStart('v', 'V'));
+                    return utf.GetString(html);
             }
             catch (Exception)
             {
                 return "0.0.0.0";
             }
         }
-        public bool isUpdateAvailable()
+
+        private UpdateStatus GetUpdateStatus(out string updateVersion)
         {
             try
             {
-                bool isLatestDevBuild = false;
-                bool isCurrentDevBuild = false;
-                Int64 latestSubVersion, currentSubVersion;
-                if (getLatestVersion().Contains("DEV")) isLatestDevBuild = true;
-                string latestVer = getLatestVersion();
-                string currentVer = core.getVersionInfo();
-                string latestVerStripped = latestVer;
-                Int64 latestVerDevBuildNo = -1;
-                Int64 currentVerDevBuildNo = -1;
+                string latestVer = GetLatestVersion();
+                string currentVer = core.GetVersionInfo(false, true, true);
+                updateVersion = latestVer;
 
-                if (isLatestDevBuild) latestSubVersion = Convert.ToInt64(getLatestVersion().Substring(getLatestVersion().LastIndexOf("V") + 1));
-                else latestSubVersion = 0;
-                if (isCurrentDevBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true, false).Substring(core.getVersionInfo(false, true, false).LastIndexOf("V") + 1));
-                else currentSubVersion = 0;
-
-                if (latestVer.Contains("DEV") || latestVer.Contains("BETA"))
+                if (latestVer == currentVer)
                 {
-                    isLatestDevBuild = true;
-                    latestVerStripped = latestVerStripped.Split('-')[0];
-                    latestVerStripped = latestVerStripped.TrimStart('v', 'V');
-                    latestVerDevBuildNo = Convert.ToInt64(latestVer.Split('-')[1].Replace("DEV", "").Replace("BETA", "").Replace("_", ""));
+                    return UpdateStatus.AppLatest;
                 }
-
-                if (currentVer.Contains("DEV") || currentVer.Contains("BETA"))
+                else if (latestVer != "0.0.0.0" && CheckServerConnection())
                 {
-                    isCurrentDevBuild = true;
-                    currentVerDevBuildNo = Convert.ToInt64(currentVer.Split('-')[1].Replace("DEV", "").Replace("BETA", "").Replace("_", ""));
+                    string compareVersions = String.Format("https://api.mullak99.co.uk/FAES/CompareVersions.php?app=faes_legacy&branch={0}&version1={1}&version2={2}", "dev", currentVer, latestVer);
+
+                    WebClient client = new WebClient();
+                    byte[] html = client.DownloadData(compareVersions);
+                    UTF8Encoding utf = new UTF8Encoding();
+                    string result = utf.GetString(html).ToLower();
+
+                    if (String.IsNullOrEmpty(result) || result == "null")
+                        return UpdateStatus.ServerError;
+                    else if (result.Contains("not exist in the database!") || result == "version1 is newer than version2")
+                        return UpdateStatus.AppNewer;
+                    else if (result == "version1 is older than version2")
+                        return UpdateStatus.AppOutdated;
+                    else if (result == "version1 is equal to version2")
+                        return UpdateStatus.AppLatest;
+                    else
+                        return UpdateStatus.ServerError;
                 }
-
-                if (isLatestDevBuild) latestSubVersion = Convert.ToInt64(getLatestVersion().Substring(getLatestVersion().LastIndexOf("V") + 1));
-                else latestSubVersion = 0;
-                if (isCurrentDevBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true, false).Substring(core.getVersionInfo(false, true, false).LastIndexOf("V") + 1));
-                else currentSubVersion = 0;
-
-                int[] latestServerVer = ToIntArray(latestVerStripped, '.');
-                int[] currentAppVer = ToIntArray(core.getVersionInfo(true), '.');
-
-                if (getLatestVersion() == "0.0.0.0")
-                    return false;
-                else if (latestServerVer[0] > currentAppVer[0])
-                    return true;
-                else if (latestServerVer[1] > currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else if (latestServerVer[2] > currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else if (latestServerVer[3] > currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else if (isLatestDevBuild && isCurrentDevBuild)
+                else
                 {
-                    if ((latestVerDevBuildNo != -1 && currentVerDevBuildNo != -1) &&
-                        (latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0] && latestVerDevBuildNo > currentVerDevBuildNo))
-                        return true;
-                    else if (latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                        return true;
+                    return UpdateStatus.ServerError;
                 }
-                return false;
             }
             catch
             {
-                return false;
+                updateVersion = "0.0.0.0";
+                return UpdateStatus.ServerError;
             }
         }
 
-        public bool isAppNewer()
+        public void CheckForUpdate()
         {
-            try
+            if (!_updateThreadRunning)
             {
-                bool isLatestDevBuild = false;
-                bool isCurrentDevBuild = false;
-                Int64 latestSubVersion, currentSubVersion;
-                if (getLatestVersion().Contains("DEV")) isLatestDevBuild = true;
-                string latestVer = getLatestVersion();
-                string currentVer = core.getVersionInfo();
-                string latestVerStripped = latestVer;
-                Int64 latestVerDevBuildNo = -1;
-                Int64 currentVerDevBuildNo = -1;
+                _updateThreadRunning = true;
 
-                if (latestVer.Contains("DEV") || latestVer.Contains("BETA"))
+                Thread threaddedUpdateCheck = new Thread(() =>
                 {
-                    isLatestDevBuild = true;
-                    latestVerStripped = latestVerStripped.Split('-')[0];
-                    latestVerStripped = latestVerStripped.TrimStart('v', 'V');
-                    latestVerDevBuildNo = Convert.ToInt64(latestVer.Split('-')[1].Replace("DEV", "").Replace("BETA", "").Replace("_", ""));
-                }
+                    string updateVersion;
+                    UpdateStatus updateInfo = GetUpdateStatus(out updateVersion);
 
-                if (currentVer.Contains("DEV") || currentVer.Contains("BETA"))
-                {
-                    isCurrentDevBuild = true;
-                    currentVerDevBuildNo = Convert.ToInt64(currentVer.Split('-')[1].Replace("DEV", "").Replace("BETA", "").Replace("_", ""));
-                }
+                    _appUpdateStatus = updateInfo;
+                    _latestVersion = updateVersion;
+                    _updateUI = true;
+                    _updateThreadRunning = false;
+                });
+                threaddedUpdateCheck.Start();
 
-                if (isLatestDevBuild) latestSubVersion = Convert.ToInt64(getLatestVersion().Substring(getLatestVersion().LastIndexOf("V") + 1));
-                else latestSubVersion = 0;
-                if (isCurrentDevBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true, false).Substring(core.getVersionInfo(false, true, false).LastIndexOf("V") + 1));
-                else currentSubVersion = 0;
-
-                int[] latestServerVer = ToIntArray(latestVerStripped, '.');
-                int[] currentAppVer = ToIntArray(core.getVersionInfo(true), '.');
-
-                if (latestServerVer[0] < currentAppVer[0])
-                    return true;
-                else if (latestServerVer[1] < currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else if (latestServerVer[2] < currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else if (latestServerVer[3] < currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else if (isLatestDevBuild && isCurrentDevBuild)
-                {
-                    if ((latestVerDevBuildNo != -1 && currentVerDevBuildNo != -1) &&
-                        (latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0] && latestVerDevBuildNo < currentVerDevBuildNo))
-                        return true;
-                    else if (latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                        return true;
-                }
-                return false;
-            }
-            catch
-            {
-                return false;
+                if (_appUpdateStatus == UpdateStatus.AppOutdated && !Program.GetSkipUpdate()) this.Show();
             }
         }
 
-        public string detailedUpdateInfo()
+        public void UpdateUI()
         {
-            if (isUpdateAvailable())
-                return getLatestVersion();
-            else if (getLatestVersion() == "0.0.0.0")
-                return "SERVERERROR";
-            else if (isAppNewer())
-                return "APPNEWER";
+            currentVerLabel.Text = "Current Version: " + core.GetVersionInfo(false, true, true);
+
+            if (_updateThreadRunning)
+            {
+                checkForUpdateButton.Enabled = false;
+                checkForUpdateToolStripMenuItem.Enabled = false;
+                updateButton.Visible = false;
+                updateButton.Enabled = false;
+                neverRemindButton.Visible = false;
+                neverRemindButton.Enabled = false;
+                downloadLatestButton.Visible = false;
+                downloadLatestButton.Enabled = false;
+                descLabel.Text = "Checking for updates...";
+                latestVerLabel.Text = "Latest Version: Checking...";
+            }
             else
-                return "LATESTVERSION";
-        }
-
-        public void checkForUpdate()
-        {
-            updateCurrentVersion();
-
-            checkForUpdateButton.Enabled = false;
-            updateButton.Visible = false;
-            updateButton.Enabled = false;
-            neverRemindButton.Visible = false;
-            neverRemindButton.Enabled = false;
-            descLabel.Text = "Checking for updates...";
-            latestVerLabel.Text = "Latest Version: Checking...";
-
-            Thread threaddedUpdateCheck = new Thread(() =>
-            {             
-                if (detailedUpdateInfo() == "LATESTVERSION")
+            {
+                if (_appUpdateStatus == UpdateStatus.AppLatest)
                 {
-                    string latestVersion = convertOldVerToNew(getLatestVersion(), false);
+                    string latestVersion = _latestVersion;
                     descLabel.Text = "You are on the latest version!";
                     updateButton.Visible = false;
                     updateButton.Enabled = false;
                     neverRemindButton.Visible = false;
                     neverRemindButton.Enabled = false;
+                    downloadLatestButton.Visible = true;
+                    downloadLatestButton.Enabled = true;
                     latestVerLabel.Text = "Latest Version: " + latestVersion;
                 }
-                else if (detailedUpdateInfo() == "APPNEWER")
+                else if (_appUpdateStatus == UpdateStatus.AppNewer)
                 {
-                    string latestVersion = convertOldVerToNew(getLatestVersion(), false);
+                    string latestVersion = _latestVersion;
                     descLabel.Text = "You are on a private build.";
                     updateButton.Visible = false;
                     updateButton.Enabled = false;
                     neverRemindButton.Visible = false;
                     neverRemindButton.Enabled = false;
+                    downloadLatestButton.Visible = true;
+                    downloadLatestButton.Enabled = true;
                     latestVerLabel.Text = "Latest Version: " + latestVersion;
                 }
-                else if (detailedUpdateInfo() == "SERVERERROR")
+                else if (_appUpdateStatus == UpdateStatus.ServerError)
                 {
                     descLabel.Text = "Unable to connect to the update server.";
                     updateButton.Visible = false;
                     updateButton.Enabled = false;
                     neverRemindButton.Visible = false;
                     neverRemindButton.Enabled = false;
+                    downloadLatestButton.Visible = false;
+                    downloadLatestButton.Enabled = false;
                     latestVerLabel.Text = "Latest Version: SERVER ERROR!";
                 }
-                else
+                else if (_appUpdateStatus == UpdateStatus.AppOutdated)
                 {
-                    string latestVersion = convertOldVerToNew(getLatestVersion(), false);
+                    string latestVersion = _latestVersion;
                     descLabel.Text = "An update is available!";
                     updateButton.Visible = true;
                     updateButton.Enabled = true;
                     neverRemindButton.Visible = true;
                     neverRemindButton.Enabled = true;
-                    if (!Program.getSkipUpdate()) this.Show();
+                    downloadLatestButton.Visible = false;
+                    downloadLatestButton.Enabled = false;
                     latestVerLabel.Text = "Latest Version: " + latestVersion;
                 }
-            });
-            threaddedUpdateCheck.Start();
+                _updateUI = false;
+            }
 
             checkForUpdateButton.Enabled = true;
+            checkForUpdateToolStripMenuItem.Enabled = true;
         }
 
-        private string convertNewVerToOld(string newVersionFormat, bool trimV = true)
-        {
-            string rawString = newVersionFormat;
-            if (trimV) rawString = rawString.TrimStart('v', 'V');
-            else if (rawString[0] != 'v') rawString = "v" + rawString;
-
-            if (rawString.Count(c => c == '.') == 2)
-            {
-                List<string> verTagSplit = rawString.Split('-').ToList();
-                List<string> verSplit = verTagSplit[0].Split('.').ToList();
-
-                if (verSplit.Count == 3) verSplit.Add("0");
-                verTagSplit[0] = String.Join(".", verSplit.ToArray());
-
-                return String.Join("-", verTagSplit.ToArray());
-            }
-            else return rawString;
-        }
-
-        private string convertOldVerToNew(string oldVersionFormat, bool trimV = true)
-        {
-            string rawString = oldVersionFormat;
-            if (trimV) rawString = rawString.TrimStart('v', 'V');
-            else if (rawString[0] != 'v') rawString = "v" + rawString;
-
-            if (rawString.Count(c => c == '.') == 3)
-            {
-                List<string> verTagSplit = rawString.Split('-').ToList();
-                List<string> verSplit = verTagSplit[0].Split('.').ToList();
-
-                if (verSplit.Count == 4) verSplit.RemoveAt(verSplit.Count - 1);
-                verTagSplit[0] = String.Join(".", verSplit.ToArray());
-
-                return String.Join("-", verTagSplit.ToArray());
-            }
-            else return rawString;
-        }
-
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            base.OnFormClosing(e);
-
-            if (e.CloseReason == CloseReason.WindowsShutDown) return;
-
-            e.Cancel = true;
-            Hide();
-        }
-
-        private int[] ToIntArray(string value, char separator)
-        {
-            return Array.ConvertAll(value.Split(separator), s => int.Parse(s));
-        }
-
-        private void updateButton_Click(object sender, EventArgs e)
-        {
-            selfUpdate(Program.getCleanUpdates());
-        }
-
-        private void neverRemindButton_Click(object sender, EventArgs e)
-        {
-            core.setIgnoreUpdate(true);
-        }
-
-        private void checkForUpdateButton_Click(object sender, EventArgs e)
-        {
-            checkForUpdate();
-        }
-
-        public static void selfUpdate(bool doCleanUpdate = false)
+        public static void UpdateSelf(bool doCleanUpdate = false)
         {
             string installDir = Directory.GetCurrentDirectory();
 
-            if (checkServerConnection())
+            if (CheckServerConnection())
                 try
                 {
-                    File.Delete(Path.Combine(installDir, "FAES-Updater.exe"));
-                    File.Delete(Path.Combine(installDir, "updater.pack"));
+                    if (File.Exists(Path.Combine(installDir, "FAES-Updater.exe")))
+                        File.Delete(Path.Combine(installDir, "FAES-Updater.exe"));
+                    if (File.Exists(Path.Combine(installDir, "updater.pack")))
+                        File.Delete(Path.Combine(installDir, "updater.pack"));
+
                     WebClient webClient = new WebClient();
-                    webClient.DownloadFile(new Uri(DownloadLatestURL), Path.Combine(installDir, "updater.pack"));
-                    ZipFile.ExtractToDirectory(Path.Combine(installDir, "updater.pack"), Directory.GetCurrentDirectory() + "..");
+                    webClient.DownloadFile(new Uri(String.Format("https://api.mullak99.co.uk/FAES/GetDownload.php?app=faes_updater&ver=latest&branch={0}&redirect=true", Program.GetBranch())), Path.Combine(installDir, "updater.pack"));
+                    ZipFile.ExtractToDirectory(Path.Combine(installDir, "updater.pack"), installDir);
                     File.Delete(Path.Combine(installDir, "updater.pack"));
                     Thread.Sleep(100);
 
                     string args = "";
-                    if (doCleanUpdate) args += "-c ";
-                    if (Program.getFullInstall()) args += "-f ";
-                    args += "-b " + Program.getBranch() + " ";
-                    args += "--silent ";
+                    if (doCleanUpdate) args += "--pure ";
+                    if (Program.GetFullInstall()) args += "--full ";
+                    if (Program.GetDeveloperMode()) args += "--verbose ";
+                    else args += "--silent ";
+                    args += "--branch " + Program.GetBranch() + " ";
+                    args += "--tool faes_legacy ";
+                    args += "--delay 10 ";
+                    args += "--run ";
                     Process.Start(Path.Combine(installDir, "FAES-Updater.exe"), args);
 
                     Environment.Exit(0);
@@ -345,7 +230,7 @@ namespace FileAES
                 catch (UnauthorizedAccessException)
                 {
                     if (MessageBox.Show("You are not running FileAES as an admin, by doing this you cannot update the application in admin protected directories.\n\nDo you want to launch as admin?", "Notice", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        runAsAdmin();
+                        RunAsAdmin();
                 }
                 catch (Exception e)
                 {
@@ -357,16 +242,19 @@ namespace FileAES
                 }
             else
             {
-                File.Delete(Path.Combine(installDir, "updater.pack"));
+                if (File.Exists(Path.Combine(installDir, "FAES-Updater.exe")))
+                    File.Delete(Path.Combine(installDir, "FAES-Updater.exe"));
+                if (File.Exists(Path.Combine(installDir, "updater.pack")))
+                    File.Delete(Path.Combine(installDir, "updater.pack"));
             }
         }
 
-        public static bool checkServerConnection()
+        public static bool CheckServerConnection()
         {
             try
             {
                 using (var client = new WebClient())
-                using (var stream = client.OpenRead("http://mullak99.co.uk/"))
+                using (var stream = client.OpenRead("https://api.mullak99.co.uk/"))
                     return true;
             }
             catch
@@ -382,7 +270,7 @@ namespace FileAES
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
-        private static void runAsAdmin()
+        private static void RunAsAdmin()
         {
             if (!IsRunAsAdmin())
             {
@@ -400,8 +288,88 @@ namespace FileAES
                 {
                     return;
                 }
-
                 Environment.Exit(0);
+            }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+
+            if (e.CloseReason == CloseReason.WindowsShutDown) return;
+
+            e.Cancel = true;
+            Hide();
+        }
+
+        private void updateButton_Click(object sender, EventArgs e)
+        {
+            UpdateSelf(Program.GetCleanUpdates());
+        }
+
+        private void downloadLatestButton_Click(object sender, EventArgs e)
+        {
+            UpdateSelf(Program.GetCleanUpdates());
+        }
+
+        private void downloadLatestToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (downloadLatestButton.Enabled)
+                downloadLatestButton_Click(sender, e);
+            else if (updateButton.Enabled)
+                updateButton_Click(sender, e);
+        }
+
+        private void neverRemindButton_Click(object sender, EventArgs e)
+        {
+            core.setIgnoreUpdate(true);
+        }
+
+        private void checkForUpdateButton_Click(object sender, EventArgs e)
+        {
+            CheckForUpdate();
+        }
+
+        private void checkForUpdateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            checkForUpdateButton_Click(sender, e);
+        }
+
+        private void spoofV110ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            spoofV110ToolStripMenuItem.Checked = true;
+            spoofV999999ToolStripMenuItem.Checked = false;
+            spoofV132ToolStripMenuItem.Checked = false;
+            core.SetSpoofVersion(true, "1.1.0.0");
+        }
+
+        private void spoofV999999ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            spoofV110ToolStripMenuItem.Checked = false;
+            spoofV999999ToolStripMenuItem.Checked = true;
+            spoofV132ToolStripMenuItem.Checked = false;
+            core.SetSpoofVersion(true, "99.99.99.0");
+        }
+        private void spoofV132ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            spoofV110ToolStripMenuItem.Checked = false;
+            spoofV999999ToolStripMenuItem.Checked = false;
+            spoofV132ToolStripMenuItem.Checked = true;
+            core.SetSpoofVersion(true, "1.3.2.0");
+        }
+
+        private void resetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            spoofV110ToolStripMenuItem.Checked = false;
+            spoofV999999ToolStripMenuItem.Checked = false;
+            core.SetSpoofVersion(false);
+        }
+
+        private void runtime_Tick(object sender, EventArgs e)
+        {
+            if (_updateThreadRunning || _updateUI)
+            {
+                UpdateUI();
             }
         }
     }

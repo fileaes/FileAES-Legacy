@@ -1,31 +1,40 @@
-﻿using FAES;
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 
 class Core
 {
-    private const bool _flagIsDevBuild = true;
+    private const bool _flagIsDevBuild = false;
+    private const bool _flagIsBetaBuilds = true;
+    private const string _betaBuildTag = "BETA_1";
     private const string _copyrightInfo = "mullak99 © 2019";
 
-    DateTime buildDate = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
+    private bool _versionSpoof = false;
+    private string _spoofedVersion = "1.1.0.0";
 
-    private string buildHash()
+    private static DateTime buildDate = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
+
+    public static DateTime GetBuildDate()
+    {
+        return buildDate;
+    }
+
+    public static string GetBuildDateFormatted()
+    {
+        return GetBuildDate().ToString("dd/MM/yyyy hh:mm:ss tt");
+    }
+
+    private string GetBuildHash()
     {
         return (buildDate.Year % 100).ToString() + (buildDate.Month).ToString("00") + (buildDate.Day).ToString("00") + (buildDate.Hour).ToString("00") + (buildDate.Minute).ToString("00");
     }
 
-    private bool isDebugBuild()
+    public string GetVersionInfo(bool raw = false, bool formatted = false, bool trimRev = true)
     {
-        return this.GetType().Assembly.GetCustomAttributes(false).OfType<DebuggableAttribute>().Select(da => da.IsJITTrackingEnabled).FirstOrDefault();
-    }
-
-    public string getVersionInfo(bool raw = false, bool formatted = false, bool trimRev = true)
-    {
-        string version = Application.ProductVersion;
+        string version;
+        if (_versionSpoof) version = _spoofedVersion;
+        else version = Application.ProductVersion;
 
         if (trimRev)
         {
@@ -34,15 +43,25 @@ class Core
         }
         if (formatted)
         {
-            if (isDebugBuild() || _flagIsDevBuild) return "v" + version + "-DEV" + buildHash();
+            if (_flagIsDevBuild && !_versionSpoof) return "v" + version + "-DEV" + GetBuildHash();
+            else if (_flagIsBetaBuilds && !String.IsNullOrWhiteSpace(_betaBuildTag) && !_versionSpoof) return "v" + version + "-" + _betaBuildTag;
             else return "v" + version;
         }
         if (!raw)
         {
-            if (isDebugBuild() || _flagIsDevBuild) return "v" + version + "-DEV" + buildHash();
+            if (_flagIsDevBuild && !_versionSpoof) return "v" + version + "-DEV" + GetBuildHash();
+            else if (_flagIsBetaBuilds && !String.IsNullOrWhiteSpace(_betaBuildTag) && !_versionSpoof) return "v" + version + "-" + _betaBuildTag;
             else return "v" + version;
         }
-        else return Application.ProductVersion;
+        else return version;
+    }
+
+    public bool SetSpoofVersion(bool spoofVersion, string version = "1.0.0.0")
+    {
+        _versionSpoof = spoofVersion;
+
+        if (_versionSpoof) _spoofedVersion = version;
+        return _versionSpoof;
     }
 
     public string getCopyrightInfo()
@@ -53,7 +72,7 @@ class Core
     public void setIgnoreUpdate(bool state)
     {
         string path = null;
-        if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES\config\launchParams.cfg"))) path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES\config\launchParams.cfg");
+        if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES-Legacy\config\launchParams.cfg"))) path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES-Legacy\config\launchParams.cfg");
         else if (File.Exists(@"Config\launchParams.cfg")) path = @"Config\launchParams.cfg";
         if (path != null)
         {
