@@ -19,7 +19,7 @@ namespace FileAES
         private static bool _cleanUpdates = false;
         private static bool _purgeTemp = false;
         private static bool _debugMode = false;
-        private static string branch = "";
+        private static string _branch = "";
         private static string _autoPassword = null;
 
         [STAThread]
@@ -54,8 +54,8 @@ namespace FileAES
                 }
 
                 if (param[i].Equals("-fullinstall") || param[i].Equals("--fullinstall") || param[i].Equals("-f") || param[i].Equals("--f")) _fullInstall = true;
-                else if (param[i] == "--dev") branch = "dev";
-                else if (param[i] == "--stable") branch = "stable";
+                else if (param[i] == "--dev") _branch = "dev";
+                else if (param[i] == "--stable") _branch = "stable";
                 else if (param[i] == "--skipupdate" || param[i] == "-skipupdate") _skipUpdate = true;
                 else if (param[i].Equals("-cleanupdates") || param[i].Equals("--cleanupdates") || param[i].Equals("-c") || param[i].Equals("--c")) _cleanUpdates = true;
                 else if (param[i].Equals("-update") || param[i].Equals("--update") || param[i].Equals("-u") || param[i].Equals("--u")) FileAES_Update.UpdateSelf(_cleanUpdates);
@@ -63,10 +63,14 @@ namespace FileAES
                 else if (param[i].Equals("-purgetemp") || param[i].Equals("--purgetemp") || param[i].Equals("-deletetemp") || param[i].Equals("--deletetemp")) _purgeTemp = true;
                 else if (param[i].Equals("-debug") || param[i].Equals("--debug") || param[i].Equals("-developer") || param[i].Equals("--developer")) _debugMode = true;
             }
-            if (String.IsNullOrEmpty(branch)) branch = "stable";
+            if (String.IsNullOrEmpty(_branch)) _branch = "stable";
 
             if (_purgeTemp) FileAES_Utilities.PurgeTempFolder();
             if (File.Exists("FAES-Updater.exe")) File.Delete("FAES-Updater.exe");
+
+            Core core = new Core();
+            if (_branch == "stable" && (core.IsBetaBuild() || core.IsDevBuild())) _branch = core.GetBuild();
+            else if (_branch == "beta" && core.IsDevBuild()) _branch = core.GetBuild();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -90,7 +94,7 @@ namespace FileAES
 
         public static string GetBranch()
         {
-            return branch;
+            return _branch;
         }
 
         public static bool GetCleanUpdates()

@@ -6,7 +6,7 @@ using System.Windows.Forms;
 class Core
 {
     private const bool _flagIsDevBuild = false;
-    private const bool _flagIsBetaBuilds = true;
+    private const bool _flagIsBetaBuild = true;
     private const string _betaBuildTag = "BETA_1";
     private const string _copyrightInfo = "mullak99 © 2019";
 
@@ -44,16 +44,38 @@ class Core
         if (formatted)
         {
             if (_flagIsDevBuild && !_versionSpoof) return "v" + version + "-DEV" + GetBuildHash();
-            else if (_flagIsBetaBuilds && !String.IsNullOrWhiteSpace(_betaBuildTag) && !_versionSpoof) return "v" + version + "-" + _betaBuildTag;
+            else if (_flagIsBetaBuild && !String.IsNullOrWhiteSpace(_betaBuildTag) && !_versionSpoof) return "v" + version + "-" + _betaBuildTag;
             else return "v" + version;
         }
         if (!raw)
         {
             if (_flagIsDevBuild && !_versionSpoof) return "v" + version + "-DEV" + GetBuildHash();
-            else if (_flagIsBetaBuilds && !String.IsNullOrWhiteSpace(_betaBuildTag) && !_versionSpoof) return "v" + version + "-" + _betaBuildTag;
+            else if (_flagIsBetaBuild && !String.IsNullOrWhiteSpace(_betaBuildTag) && !_versionSpoof) return "v" + version + "-" + _betaBuildTag;
             else return "v" + version;
         }
         else return version;
+    }
+
+    public bool IsStableBuild()
+    {
+        return (!_flagIsDevBuild && !_flagIsBetaBuild);
+    }
+
+    public bool IsBetaBuild()
+    {
+        return (!_flagIsDevBuild && _flagIsBetaBuild);
+    }
+
+    public bool IsDevBuild()
+    {
+        return _flagIsDevBuild;
+    }
+
+    public string GetBuild()
+    {
+        if (IsDevBuild()) return "dev";
+        else if (IsBetaBuild()) return "beta";
+        else return "stable";
     }
 
     public bool SetSpoofVersion(bool spoofVersion, string version = "1.0.0.0")
