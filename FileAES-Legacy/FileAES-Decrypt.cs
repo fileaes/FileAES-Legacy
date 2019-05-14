@@ -33,9 +33,13 @@ namespace FileAES
             progressBar.VisualMode = ProgressBarDisplayMode.Percentage;
         }
 
-        private void FileAES_Decrypt_Load(object sender, EventArgs e)
+        private void FileAES_Decrypt_Shown(object sender, EventArgs e)
         {
             update.CheckForUpdate();
+        }
+
+        private void FileAES_Decrypt_Load(object sender, EventArgs e)
+        {
             hintTextbox.Text = _fileToDecrypt.GetPasswordHint();
 
             if (_autoPassword != null && _autoPassword.Length > 3)

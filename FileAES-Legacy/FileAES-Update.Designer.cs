@@ -46,10 +46,10 @@
             this.spoofVersionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.spoofV110ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.spoofV999999ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.spoofV132ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.runtime = new System.Windows.Forms.Timer(this.components);
             this.downloadLatestButton = new System.Windows.Forms.Button();
-            this.spoofV132ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -164,14 +164,14 @@
             // checkForUpdateToolStripMenuItem
             // 
             this.checkForUpdateToolStripMenuItem.Name = "checkForUpdateToolStripMenuItem";
-            this.checkForUpdateToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.checkForUpdateToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.checkForUpdateToolStripMenuItem.Text = "Check for Update";
             this.checkForUpdateToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdateToolStripMenuItem_Click);
             // 
             // downloadLatestToolStripMenuItem
             // 
             this.downloadLatestToolStripMenuItem.Name = "downloadLatestToolStripMenuItem";
-            this.downloadLatestToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.downloadLatestToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.downloadLatestToolStripMenuItem.Text = "Download Latest";
             this.downloadLatestToolStripMenuItem.Click += new System.EventHandler(this.downloadLatestToolStripMenuItem_Click);
             // 
@@ -195,19 +195,26 @@
             this.spoofVersionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.spoofVersionToolStripMenuItem.Text = "Spoof Version";
             // 
-            // spoofV1100ToolStripMenuItem
+            // spoofV110ToolStripMenuItem
             // 
-            this.spoofV110ToolStripMenuItem.Name = "spoofV1100ToolStripMenuItem";
+            this.spoofV110ToolStripMenuItem.Name = "spoofV110ToolStripMenuItem";
             this.spoofV110ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.spoofV110ToolStripMenuItem.Text = "Spoof v1.1.0";
             this.spoofV110ToolStripMenuItem.Click += new System.EventHandler(this.spoofV110ToolStripMenuItem_Click);
             // 
-            // spoofV9999990ToolStripMenuItem
+            // spoofV999999ToolStripMenuItem
             // 
-            this.spoofV999999ToolStripMenuItem.Name = "spoofV9999990ToolStripMenuItem";
+            this.spoofV999999ToolStripMenuItem.Name = "spoofV999999ToolStripMenuItem";
             this.spoofV999999ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.spoofV999999ToolStripMenuItem.Text = "Spoof v99.99.99";
             this.spoofV999999ToolStripMenuItem.Click += new System.EventHandler(this.spoofV999999ToolStripMenuItem_Click);
+            // 
+            // spoofV132ToolStripMenuItem
+            // 
+            this.spoofV132ToolStripMenuItem.Name = "spoofV132ToolStripMenuItem";
+            this.spoofV132ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.spoofV132ToolStripMenuItem.Text = "Spoof v1.3.2";
+            this.spoofV132ToolStripMenuItem.Click += new System.EventHandler(this.spoofV132ToolStripMenuItem_Click);
             // 
             // resetToolStripMenuItem
             // 
@@ -236,13 +243,6 @@
             this.downloadLatestButton.UseVisualStyleBackColor = false;
             this.downloadLatestButton.Visible = false;
             this.downloadLatestButton.Click += new System.EventHandler(this.downloadLatestButton_Click);
-            // 
-            // spoofV132ToolStripMenuItem
-            // 
-            this.spoofV132ToolStripMenuItem.Name = "spoofV132ToolStripMenuItem";
-            this.spoofV132ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.spoofV132ToolStripMenuItem.Text = "Spoof v1.3.2";
-            this.spoofV132ToolStripMenuItem.Click += new System.EventHandler(this.spoofV132ToolStripMenuItem_Click);
             // 
             // FileAES_Update
             // 

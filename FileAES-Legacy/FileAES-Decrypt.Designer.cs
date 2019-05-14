@@ -203,6 +203,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "FileAES: Decrypt";
             this.Load += new System.EventHandler(this.FileAES_Decrypt_Load);
+            this.Shown += new System.EventHandler(this.FileAES_Decrypt_Shown);
             this.ResumeLayout(false);
             this.PerformLayout();
 
