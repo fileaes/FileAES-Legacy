@@ -247,6 +247,7 @@
             this.Text = "FileAES: Encrypt";
             this.TopMost = true;
             this.Load += new System.EventHandler(this.FileAES_Encrypt_Load);
+            this.Shown += new System.EventHandler(this.FileAES_Encrypt_Shown);
             this.ResumeLayout(false);
             this.PerformLayout();
 

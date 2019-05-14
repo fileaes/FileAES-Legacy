@@ -17,10 +17,13 @@ namespace FileAES
             copyrightLabel.Text = core.getCopyrightInfo();
         }
 
-        private void FileAES_Main_Load(object sender, EventArgs e)
+        private void FileAES_Main_Shown(object sender, EventArgs e)
         {
             update.CheckForUpdate();
         }
+
+        private void FileAES_Main_Load(object sender, EventArgs e)
+        { }
 
         private void encryptFileDrop_DragEnter(object sender, DragEventArgs e)
         {

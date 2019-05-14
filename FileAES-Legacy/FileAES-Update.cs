@@ -16,6 +16,7 @@ namespace FileAES
         private string _latestVersion;
         private bool _updateThreadRunning = false;
         private bool _updateUI = false;
+        private bool _showOnce = false;
 
         private static Core core = new Core();
 
@@ -118,8 +119,6 @@ namespace FileAES
                     _updateThreadRunning = false;
                 });
                 threaddedUpdateCheck.Start();
-
-                if (_appUpdateStatus == UpdateStatus.AppOutdated && !Program.GetSkipUpdate()) this.Show();
             }
         }
 
@@ -188,6 +187,12 @@ namespace FileAES
                     downloadLatestButton.Visible = false;
                     downloadLatestButton.Enabled = false;
                     latestVerLabel.Text = "Latest Version: " + latestVersion;
+
+                    if (_appUpdateStatus == UpdateStatus.AppOutdated && !Program.GetSkipUpdate() && !_showOnce)
+                    {
+                        _showOnce = true;
+                        this.Show();
+                    }
                 }
                 _updateUI = false;
             }

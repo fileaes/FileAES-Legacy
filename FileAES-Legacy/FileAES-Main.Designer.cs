@@ -146,14 +146,14 @@
             // encryptToolStripMenuItem
             // 
             this.encryptToolStripMenuItem.Name = "encryptToolStripMenuItem";
-            this.encryptToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.encryptToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.encryptToolStripMenuItem.Text = "Encrypt";
             this.encryptToolStripMenuItem.Click += new System.EventHandler(this.encryptFileDrop_Click);
             // 
             // decryptToolStripMenuItem
             // 
             this.decryptToolStripMenuItem.Name = "decryptToolStripMenuItem";
-            this.decryptToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.decryptToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.decryptToolStripMenuItem.Text = "Decrypt";
             this.decryptToolStripMenuItem.Click += new System.EventHandler(this.decryptFileDrop_Click);
             // 
@@ -168,7 +168,7 @@
             // clearTempToolStripMenuItem
             // 
             this.clearTempToolStripMenuItem.Name = "clearTempToolStripMenuItem";
-            this.clearTempToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.clearTempToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
             this.clearTempToolStripMenuItem.Text = "Clear Temp";
             this.clearTempToolStripMenuItem.Click += new System.EventHandler(this.clearTempToolStripMenuItem_Click);
             // 
@@ -190,6 +190,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "FileAES";
             this.Load += new System.EventHandler(this.FileAES_Main_Load);
+            this.Shown += new System.EventHandler(this.FileAES_Main_Shown);
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.menuStrip1.ResumeLayout(false);
