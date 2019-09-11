@@ -173,7 +173,7 @@
             // hintInput
             // 
             this.hintInput.Location = new System.Drawing.Point(74, 99);
-            this.hintInput.MaxLength = 64;
+            this.hintInput.MaxLength = 0;
             this.hintInput.Multiline = true;
             this.hintInput.Name = "hintInput";
             this.hintInput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;

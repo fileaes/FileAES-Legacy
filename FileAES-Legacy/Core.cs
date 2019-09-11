@@ -5,9 +5,9 @@ using System.Windows.Forms;
 
 class Core
 {
-    private const bool _flagIsDevBuild = false;
-    private const bool _flagIsBetaBuild = true;
-    private const string _betaBuildTag = "BETA_2";
+    private const bool _flagIsDevBuild = true;
+    private const bool _flagIsBetaBuild = false;
+    private const string _betaBuildTag = "BETA_3";
     private const string _copyrightInfo = "mullak99 © 2019";
 
     private bool _versionSpoof = false;

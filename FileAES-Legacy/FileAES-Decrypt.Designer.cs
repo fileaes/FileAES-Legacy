@@ -152,7 +152,7 @@
             // hintTextbox
             // 
             this.hintTextbox.Location = new System.Drawing.Point(74, 66);
-            this.hintTextbox.MaxLength = 64;
+            this.hintTextbox.MaxLength = 0;
             this.hintTextbox.Multiline = true;
             this.hintTextbox.Name = "hintTextbox";
             this.hintTextbox.ReadOnly = true;
