@@ -43,6 +43,8 @@
             this.hintLabel = new System.Windows.Forms.Label();
             this.hintTextbox = new System.Windows.Forms.TextBox();
             this.slowToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.forceOverwrite = new System.Windows.Forms.CheckBox();
+            this.deleteOriginal = new System.Windows.Forms.CheckBox();
             this.progressBar = new FileAES.TextProgressBar();
             this.SuspendLayout();
             // 
@@ -62,7 +64,7 @@
             // 
             this.decryptButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.decryptButton.Enabled = false;
-            this.decryptButton.Location = new System.Drawing.Point(12, 145);
+            this.decryptButton.Location = new System.Drawing.Point(12, 175);
             this.decryptButton.Name = "decryptButton";
             this.decryptButton.Size = new System.Drawing.Size(228, 23);
             this.decryptButton.TabIndex = 14;
@@ -114,9 +116,9 @@
             this.noteLabel.AutoEllipsis = true;
             this.noteLabel.BackColor = System.Drawing.SystemColors.Control;
             this.noteLabel.ForeColor = System.Drawing.Color.Black;
-            this.noteLabel.Location = new System.Drawing.Point(8, 98);
+            this.noteLabel.Location = new System.Drawing.Point(8, 121);
             this.noteLabel.Name = "noteLabel";
-            this.noteLabel.Size = new System.Drawing.Size(236, 23);
+            this.noteLabel.Size = new System.Drawing.Size(236, 30);
             this.noteLabel.TabIndex = 15;
             this.noteLabel.Text = "Note: Press \'Decrypt\' to decrypt your chosen file.";
             this.noteLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
@@ -125,7 +127,7 @@
             // copyrightLabel
             // 
             this.copyrightLabel.AutoSize = true;
-            this.copyrightLabel.Location = new System.Drawing.Point(164, 173);
+            this.copyrightLabel.Location = new System.Drawing.Point(164, 203);
             this.copyrightLabel.Name = "copyrightLabel";
             this.copyrightLabel.Size = new System.Drawing.Size(88, 13);
             this.copyrightLabel.TabIndex = 17;
@@ -133,7 +135,7 @@
             // 
             // versionLabel
             // 
-            this.versionLabel.Location = new System.Drawing.Point(0, 173);
+            this.versionLabel.Location = new System.Drawing.Point(0, 203);
             this.versionLabel.Name = "versionLabel";
             this.versionLabel.Size = new System.Drawing.Size(158, 13);
             this.versionLabel.TabIndex = 18;
@@ -166,10 +168,34 @@
             this.slowToolTip.InitialDelay = 1000;
             this.slowToolTip.ReshowDelay = 100;
             // 
+            // forceOverwrite
+            // 
+            this.forceOverwrite.AutoSize = true;
+            this.forceOverwrite.Checked = true;
+            this.forceOverwrite.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.forceOverwrite.Location = new System.Drawing.Point(122, 101);
+            this.forceOverwrite.Name = "forceOverwrite";
+            this.forceOverwrite.Size = new System.Drawing.Size(119, 17);
+            this.forceOverwrite.TabIndex = 26;
+            this.forceOverwrite.Text = "Overwrite Duplicate";
+            this.forceOverwrite.UseVisualStyleBackColor = true;
+            // 
+            // deleteOriginal
+            // 
+            this.deleteOriginal.AutoSize = true;
+            this.deleteOriginal.Checked = true;
+            this.deleteOriginal.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.deleteOriginal.Location = new System.Drawing.Point(11, 101);
+            this.deleteOriginal.Name = "deleteOriginal";
+            this.deleteOriginal.Size = new System.Drawing.Size(95, 17);
+            this.deleteOriginal.TabIndex = 25;
+            this.deleteOriginal.Text = "Delete Original";
+            this.deleteOriginal.UseVisualStyleBackColor = true;
+            // 
             // progressBar
             // 
             this.progressBar.CustomText = "";
-            this.progressBar.Location = new System.Drawing.Point(12, 124);
+            this.progressBar.Location = new System.Drawing.Point(12, 154);
             this.progressBar.Name = "progressBar";
             this.progressBar.ProgressColor = System.Drawing.Color.Lime;
             this.progressBar.Size = new System.Drawing.Size(228, 18);
@@ -184,7 +210,9 @@
             this.AcceptButton = this.decryptButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(251, 187);
+            this.ClientSize = new System.Drawing.Size(251, 217);
+            this.Controls.Add(this.forceOverwrite);
+            this.Controls.Add(this.deleteOriginal);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.hintTextbox);
             this.Controls.Add(this.hintLabel);
@@ -225,5 +253,7 @@
         private System.Windows.Forms.TextBox hintTextbox;
         private System.Windows.Forms.ToolTip slowToolTip;
         private TextProgressBar progressBar;
+        private System.Windows.Forms.CheckBox forceOverwrite;
+        private System.Windows.Forms.CheckBox deleteOriginal;
     }
 }
