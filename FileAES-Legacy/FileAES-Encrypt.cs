@@ -18,6 +18,8 @@ namespace FileAES
         private FAES_File _fileToEncrypt;
         private string _autoPassword;
         private decimal _progress = 0;
+        private bool _deleteOriginal, _overwriteDuplicate;
+        private FAES.Packaging.Optimise _compressionMode;
 
         public FileAES_Encrypt(string file, string password = null)
         {
@@ -55,29 +57,36 @@ namespace FileAES
 
         private void SetNote(string note, int severity)
         {
-            if (note.Contains("ERROR:"))
+            try
             {
-                note = note.Replace("ERROR:", "Error:");
-                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = note; }));
-            }
-            else
-            {
-                switch (severity)
+                if (!noteLabel.IsDisposed)
                 {
-                    case 1:
-                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
-                        break;
-                    case 2:
-                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
-                        break;
-                    case 3:
-                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
-                        break;
-                    default:
-                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
-                        break;
+                    if (note.Contains("ERROR:"))
+                    {
+                        note = note.Replace("ERROR:", "Error:");
+                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = note; }));
+                    }
+                    else
+                    {
+                        switch (severity)
+                        {
+                            case 1:
+                                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
+                                break;
+                            case 2:
+                                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
+                                break;
+                            case 3:
+                                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
+                                break;
+                            default:
+                                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+                                break;
+                        }
+                    }
                 }
             }
+            catch { }
         }
 
         private void encryptButton_Click(object sender, EventArgs e)
@@ -85,6 +94,11 @@ namespace FileAES
             if (encryptButton.Enabled)
             {
                 _progress = 0;
+
+                _compressionMode = FAES.Packaging.CompressionUtils.GetAllOptimiseModes()[compressMode.SelectedIndex];
+                _deleteOriginal = deleteOriginal.Checked;
+                _overwriteDuplicate = forceOverwrite.Checked;
+
                 if (_fileToEncrypt.isFileEncryptable() && !_inProgress && passwordInputConf.Text == passwordInput.Text) backgroundEncrypt.RunWorkerAsync();
                 else if (passwordInputConf.Text != passwordInput.Text) SetNote("Passwords do not match!", 2);
                 else if (_inProgress) SetNote("Encryption already in progress.", 1);
@@ -107,11 +121,20 @@ namespace FileAES
                 {
                     FAES.FileAES_Encrypt encrypt = new FAES.FileAES_Encrypt(_fileToEncrypt, passwordInput.Text, hintInput.Text);
 
-                    encrypt.SetCompressionMode(FAES.Packaging.CompressionUtils.GetAllOptimiseModes()[compressMode.SelectedIndex]);
+                    encrypt.SetCompressionMode(_compressionMode);
+                    encrypt.SetDeleteAfterEncrypt(_deleteOriginal);
+                    encrypt.SetOverwriteDuplicate(_overwriteDuplicate);
 
                     Thread eThread = new Thread(() =>
                     {
-                        _encryptSuccessful = encrypt.encryptFile();
+                        try
+                        {
+                            _encryptSuccessful = encrypt.encryptFile();
+                        }
+                        catch (Exception e)
+                        {
+                            SetNote(FileAES_Utilities.FAES_ExceptionHandling(e), 3);
+                        }
                     });
                     eThread.Start();
 
@@ -121,7 +144,7 @@ namespace FileAES
                     }
 
                     backgroundEncrypt.CancelAsync();
-                }
+                } 
             }
             catch (Exception e)
             {
@@ -168,6 +191,8 @@ namespace FileAES
                 passwordInputConf.Enabled = false;
                 hintInput.Enabled = false;
                 compressMode.Enabled = false;
+                deleteOriginal.Enabled = false;
+                forceOverwrite.Enabled = false;
 
                 if (_progress < 100)
                 {
@@ -190,6 +215,8 @@ namespace FileAES
                 passwordInputConf.Enabled = true;
                 hintInput.Enabled = true;
                 compressMode.Enabled = true;
+                deleteOriginal.Enabled = true;
+                forceOverwrite.Enabled = true;
 
             }
             else
@@ -199,6 +226,8 @@ namespace FileAES
                 passwordInputConf.Enabled = true;
                 hintInput.Enabled = true;
                 compressMode.Enabled = true;
+                deleteOriginal.Enabled = true;
+                forceOverwrite.Enabled = true;
             }
         }
 

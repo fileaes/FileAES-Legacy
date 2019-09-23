@@ -16,6 +16,7 @@ namespace FileAES
         private FAES_File _fileToDecrypt;
         private string _autoPassword;
         private decimal _progress = 0;
+        private bool _deleteOriginal, _overwriteDuplicate;
 
         public FileAES_Decrypt(string file, string password = null)
         {
@@ -55,6 +56,10 @@ namespace FileAES
             if (decryptButton.Enabled)
             {
                 _progress = 0;
+
+                _deleteOriginal = deleteOriginal.Checked;
+                _overwriteDuplicate = forceOverwrite.Checked;
+
                 if (_fileToDecrypt.isFileDecryptable() && !_inProgress) backgroundDecrypt.RunWorkerAsync();
                 else if (_inProgress) SetNote("Decryption already in progress.", 1);
                 else SetNote("Decryption Failed. Try again later.", 1);
@@ -65,29 +70,38 @@ namespace FileAES
 
         private void SetNote(string note, int severity)
         {
-            if (note.Contains("ERROR:"))
+            try
             {
-                note = note.Replace("ERROR:", "Error:");
-                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = note; }));
-            }
-            else
-            {
-                switch (severity)
+                if (!noteLabel.IsDisposed)
                 {
-                    case 1:
-                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
-                        break;
-                    case 2:
-                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
-                        break;
-                    case 3:
-                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
-                        break;
-                    default:
-                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
-                        break;
+                    if (note.Contains("ERROR:"))
+                    {
+                        note = note.Replace("ERROR:", "Error:");
+                        noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = note; }));
+                    }
+                    else
+                    {
+                        switch (severity)
+                        {
+                            case 1:
+                                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
+                                break;
+                            case 2:
+                                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
+                                break;
+                            case 3:
+                                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
+                                break;
+                            default:
+                                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+                                break;
+                        }
+                    }
                 }
             }
+            catch
+            { }
+            
         }
 
         private void Decrypt()
@@ -103,9 +117,19 @@ namespace FileAES
                 {
                     FAES.FileAES_Decrypt decrypt = new FAES.FileAES_Decrypt(_fileToDecrypt, passwordInput.Text);
 
+                    decrypt.SetDeleteAfterDecrypt(_deleteOriginal);
+                    decrypt.SetOverwriteDuplicate(_overwriteDuplicate);
+
                     Thread dThread = new Thread(() =>
                     {
-                        _decryptSuccessful = decrypt.decryptFile();
+                        try
+                        {
+                            _decryptSuccessful = decrypt.decryptFile();
+                        }
+                        catch (Exception e)
+                        {
+                            SetNote(FileAES_Utilities.FAES_ExceptionHandling(e), 3);
+                        }
                     });
                     dThread.Start();
 
@@ -132,7 +156,7 @@ namespace FileAES
         {
             _inProgress = false;
             if (_decryptSuccessful) Application.Exit();
-            else
+            else if (!noteLabel.Text.ToLower().Contains("error"))
             {
                 SetNote("Password Incorrect!", 3);
                 progressBar.CustomText = "Password Incorrect!";
@@ -146,6 +170,8 @@ namespace FileAES
             {
                 decryptButton.Enabled = false;
                 passwordInput.Enabled = false;
+                deleteOriginal.Enabled = false;
+                forceOverwrite.Enabled = false;
 
                 if (_progress < 100)
                 {
@@ -165,12 +191,16 @@ namespace FileAES
             {
                 decryptButton.Enabled = true;
                 passwordInput.Enabled = true;
+                deleteOriginal.Enabled = true;
+                forceOverwrite.Enabled = true;
 
             }
             else
             {
                 decryptButton.Enabled = false;
                 passwordInput.Enabled = true;
+                deleteOriginal.Enabled = true;
+                forceOverwrite.Enabled = true;
             }
         }
 
