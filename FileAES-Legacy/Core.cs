@@ -7,7 +7,7 @@ class Core
 {
     private const bool _flagIsDevBuild = false;
     private const bool _flagIsBetaBuild = true;
-    private const string _betaBuildTag = "BETA_3";
+    private const string _betaBuildTag = "BETA_4";
     private const string _copyrightInfo = "mullak99 © 2019";
 
     private bool _versionSpoof = false;
