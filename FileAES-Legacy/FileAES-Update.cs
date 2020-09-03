@@ -228,6 +228,12 @@ namespace FileAES
                     args += "--tool faes_legacy ";
                     args += "--delay 10 ";
                     args += "--run ";
+                    if (Program.GetFullInstall())
+                    {
+                        ProcessStartInfo proc = new ProcessStartInfo();
+                        proc.UseShellExecute = true;
+                        proc.Verb = "runas";
+                    }
                     Process.Start(Path.Combine(installDir, "FAES-Updater.exe"), args);
 
                     Environment.Exit(0);

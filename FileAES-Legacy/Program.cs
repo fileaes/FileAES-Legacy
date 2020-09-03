@@ -8,6 +8,8 @@ namespace FileAES
 {
     static class Program
     {
+        private const string _fullInstallPath = @"mullak99\FileAES\config\FileAES_Legacy-launchParams.cfg";
+        private const string _localInstallPath = @"config\launchParams.cfg";
 
         public static string fileName = "";
         public static string tempPathInstance = "";
@@ -28,8 +30,8 @@ namespace FileAES
             tempPathInstance = Path.Combine(Path.GetTempPath(), "FileAES");
             List<string> arguments = new List<string>();
             arguments.AddRange(args);
-            if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES-Legacy\config\launchParams.cfg"))) arguments.AddRange(ReadLaunchParams());
-            if (File.Exists(@"Config\launchParams.cfg")) arguments.AddRange(ReadLaunchParams(true));
+            if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), _fullInstallPath))) arguments.AddRange(ReadLaunchParams());
+            if (File.Exists(_localInstallPath)) arguments.AddRange(ReadLaunchParams(true));
 
             string[] param = arguments.ToArray();
 
@@ -55,6 +57,7 @@ namespace FileAES
 
                 if (param[i].Equals("-fullinstall") || param[i].Equals("--fullinstall") || param[i].Equals("-f") || param[i].Equals("--f")) _fullInstall = true;
                 else if (param[i] == "--dev") _branch = "dev";
+                else if (param[i] == "--beta") _branch = "beta";
                 else if (param[i] == "--stable") _branch = "stable";
                 else if (param[i] == "--skipupdate" || param[i] == "-skipupdate") _skipUpdate = true;
                 else if (param[i].Equals("-cleanupdates") || param[i].Equals("--cleanupdates") || param[i].Equals("-c") || param[i].Equals("--c")) _cleanUpdates = true;
@@ -84,9 +87,9 @@ namespace FileAES
         {
             string dir;
             if (local)
-                dir = Path.Combine(Directory.GetCurrentDirectory(), @"config\launchParams.cfg");
+                dir = Path.Combine(Directory.GetCurrentDirectory(), _localInstallPath);
             else
-                dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES-Legacy\config\launchParams.cfg");
+                dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), _fullInstallPath);
 
             if (File.Exists(dir)) return File.ReadAllLines(dir);
             else return null;
