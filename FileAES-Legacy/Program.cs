@@ -23,6 +23,9 @@ namespace FileAES
         private static bool _debugMode = false;
         private static string _branch = "";
         private static string _autoPassword = null;
+        private static bool _doFilePeek = false;
+
+        private static readonly List<string> _supportedPeekFiles = new List<string> { ".TXT", ".MD", ".LOG" };
 
         [STAThread]
         static void Main(string[] args)
@@ -65,6 +68,7 @@ namespace FileAES
                 else if (param[i].Equals("-password") || param[i].Equals("--password") || param[i].Equals("-p") || param[i].Equals("--p") && !String.IsNullOrEmpty(param[i + 1])) _autoPassword = param[i + 1];
                 else if (param[i].Equals("-purgetemp") || param[i].Equals("--purgetemp") || param[i].Equals("-deletetemp") || param[i].Equals("--deletetemp")) _purgeTemp = true;
                 else if (param[i].Equals("-debug") || param[i].Equals("--debug") || param[i].Equals("-developer") || param[i].Equals("--developer")) _debugMode = true;
+                else if (param[i].Equals("-peek") || param[i].Equals("--peek") || param[i].Equals("-filepeek") || param[i].Equals("--filepeek")) _doFilePeek = true;
             }
             if (String.IsNullOrEmpty(_branch)) _branch = "stable";
 
@@ -78,9 +82,23 @@ namespace FileAES
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             if (doEncryptFile || doEncryptFolder) Application.Run(new FileAES_Encrypt(fileName, _autoPassword));
-            else if (doDecrypt) Application.Run(new FileAES_Decrypt(fileName, _autoPassword));
+            else if (doDecrypt)
+            {
+                if (_doFilePeek && IsFileValidForPeek(new FAES_File(fileName)))
+                    Application.Run(new FileAES_Peek(fileName, _autoPassword));
+                else
+                    Application.Run(new FileAES_Decrypt(fileName, _autoPassword));
+            }
             else Application.Run(new FileAES_Main());
 
+        }
+
+        public static bool IsFileValidForPeek(FAES_File faesFile)
+        {
+            if (faesFile.isFileDecryptable())
+                return _supportedPeekFiles.Contains(Path.GetExtension(faesFile.GetOriginalFileName()).ToUpper());
+
+            return false;
         }
 
         public static string[] ReadLaunchParams(bool local = false)

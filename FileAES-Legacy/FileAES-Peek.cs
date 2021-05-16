@@ -1,31 +1,31 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using FAES;
 
 namespace FileAES
 {
-    public partial class FileAES_Decrypt : Form
+    public partial class FileAES_Peek : Form
     {
         Core core = new Core();
         FileAES_Update update = new FileAES_Update();
 
         private bool _inProgress = false;
         private bool _decryptSuccessful;
-        private FAES_File _fileToDecrypt;
-        private string _autoPassword;
+        private FAES_File _fileToPeek;
+        private string _autoPassword, _pathOverride, _finalPath;
         private decimal _progress = 0;
-        private bool _deleteOriginal, _overwriteDuplicate;
 
-        public FileAES_Decrypt(string file, string password = null)
+        public FileAES_Peek(string file, string password = null)
         {
-            if (!String.IsNullOrEmpty(file)) _fileToDecrypt = new FAES_File(file);
+            if (!String.IsNullOrEmpty(file)) _fileToPeek = new FAES_File(file);
             else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.GetVersionInfo();
             copyrightLabel.Text = core.getCopyrightInfo();
-            if (Program.doDecrypt) fileName.Text = _fileToDecrypt.getFileName();
+            if (Program.doDecrypt) fileName.Text = _fileToPeek.getFileName();
             this.Focus();
             this.ActiveControl = passwordInput;
             _autoPassword = password;
@@ -41,7 +41,7 @@ namespace FileAES
 
         private void FileAES_Decrypt_Load(object sender, EventArgs e)
         {
-            hintTextbox.Text = _fileToDecrypt.GetPasswordHint();
+            hintTextbox.Text = _fileToPeek.GetPasswordHint();
 
             if (_autoPassword != null && _autoPassword.Length > 3)
             {
@@ -57,10 +57,7 @@ namespace FileAES
             {
                 _progress = 0;
 
-                _deleteOriginal = deleteOriginal.Checked;
-                _overwriteDuplicate = forceOverwrite.Checked;
-
-                if (_fileToDecrypt.isFileDecryptable() && !_inProgress) backgroundDecrypt.RunWorkerAsync();
+                if (_fileToPeek.isFileDecryptable() && !_inProgress) backgroundDecrypt.RunWorkerAsync();
                 else if (_inProgress) SetNote("Decryption already in progress.", 1);
                 else SetNote("Decryption Failed. Try again later.", 1);
 
@@ -115,13 +112,20 @@ namespace FileAES
 
                 while (!backgroundDecrypt.CancellationPending)
                 {
-                    FAES.FileAES_Decrypt decrypt = new FAES.FileAES_Decrypt(_fileToDecrypt, passwordInput.Text, _deleteOriginal, _overwriteDuplicate);
+                    FAES.FileAES_Decrypt decrypt = new FAES.FileAES_Decrypt(_fileToPeek, passwordInput.Text, false, true);
+
+                    _pathOverride = Path.Combine(Path.GetDirectoryName(_fileToPeek.getPath()), "faesPeekFilePath_" + new Random().Next(), "peekFile" + FileAES_Utilities.ExtentionUFAES);
+                    string dirName = Path.GetDirectoryName(_pathOverride);
+                    _finalPath = Path.Combine(dirName, _fileToPeek.GetOriginalFileName());
+
+                    DirectoryInfo di = Directory.CreateDirectory(dirName);
+                    di.Attributes = FileAttributes.Directory | FileAttributes.Hidden;
 
                     Thread dThread = new Thread(() =>
                     {
                         try
                         {
-                            _decryptSuccessful = decrypt.decryptFile();
+                            _decryptSuccessful = decrypt.decryptFile(_pathOverride);
                         }
                         catch (Exception e)
                         {
@@ -152,7 +156,16 @@ namespace FileAES
         private void backgroundDecrypt_Complete(object sender, RunWorkerCompletedEventArgs e)
         {
             _inProgress = false;
-            if (_decryptSuccessful) Application.Exit();
+            if (_decryptSuccessful)
+            {
+                SetNote("Decryption Complete", 0);
+                progressBar.CustomText = "Done";
+                progressBar.VisualMode = ProgressBarDisplayMode.TextAndPercentage;
+
+                new PeekResult(File.ReadAllText(_finalPath)).ShowDialog(this);
+
+                Delete(_pathOverride);
+            }
             else if (!noteLabel.Text.ToLower().Contains("error"))
             {
                 SetNote("Password Incorrect!", 3);
@@ -161,14 +174,18 @@ namespace FileAES
             }
         }
 
+        private void Delete(string pathToDelete)
+        {
+            if (Directory.Exists(Path.GetDirectoryName(pathToDelete)))
+                Directory.Delete(Path.GetDirectoryName(pathToDelete), true);
+        }
+
         private void runtime_Tick(object sender, EventArgs e)
         {
             if (_inProgress)
             {
                 decryptButton.Enabled = false;
                 passwordInput.Enabled = false;
-                deleteOriginal.Enabled = false;
-                forceOverwrite.Enabled = false;
 
                 if (_progress < 100)
                 {
@@ -184,20 +201,16 @@ namespace FileAES
                     progressBar.Value = 100;
                 }
             }
-            else if (_fileToDecrypt.isFileDecryptable() && passwordInput.Text.Length > 3 && !_inProgress)
+            else if (_fileToPeek.isFileDecryptable() && passwordInput.Text.Length > 3 && !_inProgress)
             {
                 decryptButton.Enabled = true;
                 passwordInput.Enabled = true;
-                deleteOriginal.Enabled = true;
-                forceOverwrite.Enabled = true;
 
             }
             else
             {
                 decryptButton.Enabled = false;
                 passwordInput.Enabled = true;
-                deleteOriginal.Enabled = true;
-                forceOverwrite.Enabled = true;
             }
         }
 
