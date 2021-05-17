@@ -221,7 +221,12 @@ namespace FileAES
 
                     string args = "";
                     if (doCleanUpdate) args += "--pure ";
-                    if (Program.GetFullInstall()) args += "--full ";
+                    if (Program.GetFullInstall())
+                    {
+                        args += "--full ";
+                        args += string.Join(" ", Program.DumpInstallerOptions());
+                        args += " ";
+                    }
                     if (Program.GetDeveloperMode()) args += "--verbose ";
                     else args += "--silent ";
                     args += "--branch " + Program.GetBranch() + " ";

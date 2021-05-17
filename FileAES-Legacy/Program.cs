@@ -24,6 +24,9 @@ namespace FileAES
         private static string _branch = "";
         private static string _autoPassword = null;
         private static bool _doFilePeek = false;
+        private static bool _associateFileTypes = false;
+        private static bool _startMenuShortcuts = false;
+        private static bool _contextMenus = false;
 
         private static readonly List<string> _supportedPeekFiles = new List<string> { ".TXT", ".MD", ".LOG" };
 
@@ -59,6 +62,9 @@ namespace FileAES
                 }
 
                 if (param[i].Equals("-fullinstall") || param[i].Equals("--fullinstall") || param[i].Equals("-f") || param[i].Equals("--f")) _fullInstall = true;
+                else if (param[i] == "--associatefiletypes") _associateFileTypes = true;
+                else if (param[i] == "--startmenushortcuts") _startMenuShortcuts = true;
+                else if (param[i] == "--contextmenus") _contextMenus = true;
                 else if (param[i] == "--dev") _branch = "dev";
                 else if (param[i] == "--beta") _branch = "beta";
                 else if (param[i] == "--stable") _branch = "stable";
@@ -111,6 +117,20 @@ namespace FileAES
 
             if (File.Exists(dir)) return File.ReadAllLines(dir);
             else return null;
+        }
+
+        public static string[] DumpInstallerOptions()
+        {
+            List<string> options = new List<string>();
+
+            if (_associateFileTypes)
+                options.Add("--associatefiletypes");
+            if (_startMenuShortcuts)
+                options.Add("--startmenushortcuts");
+            if (_contextMenus)
+                options.Add("--contextmenus");
+
+            return options.ToArray();
         }
 
         public static string GetBranch()
