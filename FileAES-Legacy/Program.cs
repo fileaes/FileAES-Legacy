@@ -27,6 +27,7 @@ namespace FileAES
         private static bool _associateFileTypes = false;
         private static bool _startMenuShortcuts = false;
         private static bool _contextMenus = false;
+        private static bool _useLocalEncrypt = true;
 
         private static readonly List<string> _supportedPeekFiles = new List<string> { ".TXT", ".MD", ".LOG" };
 
@@ -75,6 +76,7 @@ namespace FileAES
                 else if (param[i].Equals("-purgetemp") || param[i].Equals("--purgetemp") || param[i].Equals("-deletetemp") || param[i].Equals("--deletetemp")) _purgeTemp = true;
                 else if (param[i].Equals("-debug") || param[i].Equals("--debug") || param[i].Equals("-developer") || param[i].Equals("--developer")) _debugMode = true;
                 else if (param[i].Equals("-peek") || param[i].Equals("--peek") || param[i].Equals("-filepeek") || param[i].Equals("--filepeek")) _doFilePeek = true;
+                else if (param[i].Equals("-tempencrypt") || param[i].Equals("--tempencrypt") || param[i].Equals("-temp") || param[i].Equals("--temp")) _useLocalEncrypt = false;
             }
             if (String.IsNullOrEmpty(_branch)) _branch = "stable";
 
@@ -156,6 +158,11 @@ namespace FileAES
         public static bool GetDeveloperMode()
         {
             return _debugMode;
+        }
+
+        public static bool UseLocalEncrypt()
+        {
+            return _useLocalEncrypt;
         }
     }
 }

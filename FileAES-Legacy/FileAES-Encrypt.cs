@@ -119,6 +119,7 @@ namespace FileAES
 
                 while (!backgroundEncrypt.CancellationPending)
                 {
+                    FileAES_Utilities.LocalEncrypt = Program.UseLocalEncrypt();
                     FAES.FileAES_Encrypt encrypt = new FAES.FileAES_Encrypt(_fileToEncrypt, passwordInput.Text, hintInput.Text);
 
                     encrypt.SetCompressionMode(_compressionMode);
