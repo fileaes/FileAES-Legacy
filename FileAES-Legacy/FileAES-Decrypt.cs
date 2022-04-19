@@ -8,26 +8,26 @@ namespace FileAES
 {
     public partial class FileAES_Decrypt : Form
     {
-        Core core = new Core();
-        FileAES_Update update = new FileAES_Update();
+        private readonly Core core = new Core();
+        private readonly FileAES_Update update = new FileAES_Update();
 
         private bool _inProgress = false;
         private bool _decryptSuccessful;
-        private FAES_File _fileToDecrypt;
-        private string _autoPassword;
+        private readonly FAES_File _fileToDecrypt;
+        private readonly string _autoPassword;
         private decimal _progress = 0;
         private bool _deleteOriginal, _overwriteDuplicate;
 
         public FileAES_Decrypt(string file, string password = null)
         {
-            if (!String.IsNullOrEmpty(file)) _fileToDecrypt = new FAES_File(file);
+            if (!string.IsNullOrEmpty(file)) _fileToDecrypt = new FAES_File(file);
             else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.GetVersionInfo();
             copyrightLabel.Text = core.getCopyrightInfo();
-            if (Program.doDecrypt) fileName.Text = _fileToDecrypt.getFileName();
-            this.Focus();
-            this.ActiveControl = passwordInput;
+            if (Program.doDecrypt) fileName.Text = _fileToDecrypt.GetFileName();
+            Focus();
+            ActiveControl = passwordInput;
             _autoPassword = password;
 
             progressBar.CustomText = "";
@@ -60,7 +60,7 @@ namespace FileAES
                 _deleteOriginal = deleteOriginal.Checked;
                 _overwriteDuplicate = forceOverwrite.Checked;
 
-                if (_fileToDecrypt.isFileDecryptable() && !_inProgress) backgroundDecrypt.RunWorkerAsync();
+                if (_fileToDecrypt.IsFileDecryptable() && !_inProgress) backgroundDecrypt.RunWorkerAsync();
                 else if (_inProgress) SetNote("Decryption already in progress.", 1);
                 else SetNote("Decryption Failed. Try again later.", 1);
 
@@ -101,7 +101,7 @@ namespace FileAES
             }
             catch
             { }
-            
+
         }
 
         private void Decrypt()
@@ -121,7 +121,7 @@ namespace FileAES
                     {
                         try
                         {
-                            _decryptSuccessful = decrypt.decryptFile();
+                            _decryptSuccessful = decrypt.DecryptFile();
                         }
                         catch (Exception e)
                         {
@@ -172,8 +172,7 @@ namespace FileAES
 
                 if (_progress < 100)
                 {
-                    if (_progress < 99) progressBar.CustomText = "Decrypting";
-                    else progressBar.CustomText = "Uncompressing";
+                    progressBar.CustomText = _progress < 99 ? "Decrypting" : "Uncompressing";
                     progressBar.VisualMode = ProgressBarDisplayMode.TextAndPercentage;
                     progressBar.Value = Convert.ToInt32(Math.Ceiling(_progress));
                 }
@@ -184,7 +183,7 @@ namespace FileAES
                     progressBar.Value = 100;
                 }
             }
-            else if (_fileToDecrypt.isFileDecryptable() && passwordInput.Text.Length > 3 && !_inProgress)
+            else if (_fileToDecrypt.IsFileDecryptable() && passwordInput.Text.Length > 3 && !_inProgress)
             {
                 decryptButton.Enabled = true;
                 passwordInput.Enabled = true;
@@ -203,7 +202,7 @@ namespace FileAES
 
         private void passwordBox_Focus(object sender, EventArgs e)
         {
-            this.AcceptButton = decryptButton;
+            AcceptButton = decryptButton;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

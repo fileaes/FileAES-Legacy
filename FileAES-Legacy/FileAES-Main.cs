@@ -7,8 +7,8 @@ namespace FileAES
 {
     public partial class FileAES_Main : Form
     {
-        Core core = new Core();
-        FileAES_Update update = new FileAES_Update();
+        private readonly Core core = new Core();
+        private readonly FileAES_Update update = new FileAES_Update();
 
         public FileAES_Main()
         {
@@ -27,24 +27,12 @@ namespace FileAES
 
         private void encryptFileDrop_DragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                e.Effect = DragDropEffects.All;
-            else
-            {
-                String[] strGetFormats = e.Data.GetFormats();
-                e.Effect = DragDropEffects.None;
-            }
+            e.Effect = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.All : DragDropEffects.None;
         }
 
         private void decryptFileDrop_DragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                e.Effect = DragDropEffects.All;
-            else
-            {
-                String[] strGetFormats = e.Data.GetFormats();
-                e.Effect = DragDropEffects.None;
-            }
+            e.Effect = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.All : DragDropEffects.None;
         }
 
         private void encryptFileDrop_DragDrop(object sender, DragEventArgs e)
@@ -87,7 +75,7 @@ namespace FileAES
             string[] FileList = (string[])e.Data.GetData(DataFormats.FileDrop, false);
 
             if (FileList.Length > 1) MessageBox.Show("You may only decrypt a single file at a time.", "Multiple Files Unsupported");
-            else if (!FileAES_Utilities.isFileDecryptable(FileList[0])) MessageBox.Show("Please select a valid filetype.", "Invalid Filetype");
+            else if (!FileAES_Utilities.IsFileDecryptable(FileList[0])) MessageBox.Show("Please select a valid filetype.", "Invalid Filetype");
             else
             {
                 Program.doDecrypt = true;
@@ -105,7 +93,7 @@ namespace FileAES
             string fileToDecrypt = "";
             if (openFileToDecrypt.ShowDialog() == DialogResult.OK)
             {
-                if (!FileAES_Utilities.isFileDecryptable(openFileToDecrypt.FileName)) MessageBox.Show("Please select a valid filetype.", "Invalid Filetype");
+                if (!FileAES_Utilities.IsFileDecryptable(openFileToDecrypt.FileName)) MessageBox.Show("Please select a valid filetype.", "Invalid Filetype");
                 else
                 {
                     fileToDecrypt = openFileToDecrypt.FileName;

@@ -10,29 +10,29 @@ namespace FileAES
 {
     public partial class FileAES_Encrypt : Form
     {
-        Core core = new Core();
-        FileAES_Update update = new FileAES_Update();
+        private readonly Core core = new Core();
+        private readonly FileAES_Update update = new FileAES_Update();
 
         private bool _inProgress = false;
         private bool _encryptSuccessful;
-        private FAES_File _fileToEncrypt;
-        private string _autoPassword;
+        private readonly FAES_File _fileToEncrypt;
+        private readonly string _autoPassword;
         private decimal _progress = 0;
         private bool _deleteOriginal, _overwriteDuplicate;
         private FAES.Packaging.Optimise _compressionMode;
 
         public FileAES_Encrypt(string file, string password = null)
         {
-            if (!String.IsNullOrEmpty(file)) _fileToEncrypt = new FAES_File(file);
+            if (!string.IsNullOrEmpty(file)) _fileToEncrypt = new FAES_File(file);
             else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.GetVersionInfo();
             copyrightLabel.Text = core.getCopyrightInfo();
             populateCompressionModes();
-            if (Program.doEncryptFile) fileName.Text = _fileToEncrypt.getFileName();
-            else if (Program.doEncryptFolder) fileName.Text = _fileToEncrypt.getFileName().TrimEnd(Path.DirectorySeparatorChar);
-            this.Focus();
-            this.ActiveControl = passwordInput;
+            if (Program.doEncryptFile) fileName.Text = _fileToEncrypt.GetFileName();
+            else if (Program.doEncryptFolder) fileName.Text = _fileToEncrypt.GetFileName().TrimEnd(Path.DirectorySeparatorChar);
+            Focus();
+            ActiveControl = passwordInput;
             _autoPassword = password;
 
             progressBar.CustomText = "";
@@ -99,7 +99,7 @@ namespace FileAES
                 _deleteOriginal = deleteOriginal.Checked;
                 _overwriteDuplicate = forceOverwrite.Checked;
 
-                if (_fileToEncrypt.isFileEncryptable() && !_inProgress && passwordInputConf.Text == passwordInput.Text) backgroundEncrypt.RunWorkerAsync();
+                if (_fileToEncrypt.IsFileEncryptable() && !_inProgress && passwordInputConf.Text == passwordInput.Text) backgroundEncrypt.RunWorkerAsync();
                 else if (passwordInputConf.Text != passwordInput.Text) SetNote("Passwords do not match!", 2);
                 else if (_inProgress) SetNote("Encryption already in progress.", 1);
                 else SetNote("Encryption Failed. Try again later.", 1);
@@ -130,7 +130,7 @@ namespace FileAES
                     {
                         try
                         {
-                            _encryptSuccessful = encrypt.encryptFile();
+                            _encryptSuccessful = encrypt.EncryptFile();
                         }
                         catch (Exception e)
                         {
@@ -145,7 +145,7 @@ namespace FileAES
                     }
 
                     backgroundEncrypt.CancelAsync();
-                } 
+                }
             }
             catch (Exception e)
             {
@@ -158,7 +158,7 @@ namespace FileAES
             List<string> optimiseModes = FAES.Packaging.CompressionUtils.GetAllOptimiseModesAsStrings();
 
             compressMode.Items.Clear();
-            
+
             foreach (string mode in optimiseModes)
             {
                 compressMode.Items.Add(mode.Replace("_", " "));
@@ -197,8 +197,7 @@ namespace FileAES
 
                 if (_progress < 100)
                 {
-                    if (_progress > 0) progressBar.CustomText = "Encrypting";
-                    else progressBar.CustomText = "Compressing";
+                    progressBar.CustomText = _progress > 0 ? "Encrypting" : "Compressing";
                     progressBar.VisualMode = ProgressBarDisplayMode.TextAndPercentage;
                     progressBar.Value = Convert.ToInt32(Math.Ceiling(_progress));
                 }
@@ -209,7 +208,7 @@ namespace FileAES
                     progressBar.Value = 100;
                 }
             }
-            else if (_fileToEncrypt.isFileEncryptable() && passwordInput.Text.Length > 3 && passwordInputConf.Text.Length > 3 && !_inProgress)
+            else if (_fileToEncrypt.IsFileEncryptable() && passwordInput.Text.Length > 3 && passwordInputConf.Text.Length > 3 && !_inProgress)
             {
                 encryptButton.Enabled = true;
                 passwordInput.Enabled = true;
@@ -234,7 +233,7 @@ namespace FileAES
 
         private void passwordBox_Focus(object sender, EventArgs e)
         {
-            this.AcceptButton = encryptButton;
+            AcceptButton = encryptButton;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

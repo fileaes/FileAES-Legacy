@@ -44,9 +44,9 @@ namespace FileAES
 
             for (int i = 0; i < param.Length; i++)
             {
-                param[i].ToLower();
+                param[i] = param[i].ToLower();
 
-                if (File.Exists(param[i]) && FileAES_Utilities.isFileDecryptable(param[i]) && !doEncryptFile && !doEncryptFolder)
+                if (File.Exists(param[i]) && FileAES_Utilities.IsFileDecryptable(param[i]) && !doEncryptFile && !doEncryptFolder)
                 {
                     doDecrypt = true;
                     fileName = param[i];
@@ -72,13 +72,13 @@ namespace FileAES
                 else if (param[i] == "--skipupdate" || param[i] == "-skipupdate") _skipUpdate = true;
                 else if (param[i].Equals("-cleanupdates") || param[i].Equals("--cleanupdates") || param[i].Equals("-c") || param[i].Equals("--c")) _cleanUpdates = true;
                 else if (param[i].Equals("-update") || param[i].Equals("--update") || param[i].Equals("-u") || param[i].Equals("--u")) FileAES_Update.UpdateSelf(_cleanUpdates);
-                else if (param[i].Equals("-password") || param[i].Equals("--password") || param[i].Equals("-p") || param[i].Equals("--p") && !String.IsNullOrEmpty(param[i + 1])) _autoPassword = param[i + 1];
+                else if (param[i].Equals("-password") || param[i].Equals("--password") || param[i].Equals("-p") || param[i].Equals("--p") && !string.IsNullOrEmpty(param[i + 1])) _autoPassword = param[i + 1];
                 else if (param[i].Equals("-purgetemp") || param[i].Equals("--purgetemp") || param[i].Equals("-deletetemp") || param[i].Equals("--deletetemp")) _purgeTemp = true;
                 else if (param[i].Equals("-debug") || param[i].Equals("--debug") || param[i].Equals("-developer") || param[i].Equals("--developer")) _debugMode = true;
                 else if (param[i].Equals("-peek") || param[i].Equals("--peek") || param[i].Equals("-filepeek") || param[i].Equals("--filepeek")) _doFilePeek = true;
                 else if (param[i].Equals("-tempencrypt") || param[i].Equals("--tempencrypt") || param[i].Equals("-temp") || param[i].Equals("--temp")) _useLocalEncrypt = false;
             }
-            if (String.IsNullOrEmpty(_branch)) _branch = "stable";
+            if (string.IsNullOrEmpty(_branch)) _branch = "stable";
 
             if (_purgeTemp) FileAES_Utilities.PurgeTempFolder();
             if (File.Exists("FAES-Updater.exe")) File.Delete("FAES-Updater.exe");
@@ -103,7 +103,7 @@ namespace FileAES
 
         public static bool IsFileValidForPeek(FAES_File faesFile)
         {
-            if (faesFile.isFileDecryptable())
+            if (faesFile.IsFileDecryptable())
                 return _supportedPeekFiles.Contains(Path.GetExtension(faesFile.GetOriginalFileName()).ToUpper());
 
             return false;

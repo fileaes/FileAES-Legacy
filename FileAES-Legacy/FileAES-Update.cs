@@ -18,7 +18,7 @@ namespace FileAES
         private bool _updateUI = false;
         private bool _showOnce = false;
 
-        private static Core core = new Core();
+        private static readonly Core core = new Core();
 
         public FileAES_Update()
         {
@@ -47,10 +47,9 @@ namespace FileAES
                 WebClient client = new WebClient();
                 byte[] html = client.DownloadData(String.Format("https://api.mullak99.co.uk/FAES/IsUpdate.php?app=faes_legacy&branch={0}&showver=true&version={1}", Program.GetBranch(), core.GetVersionInfo(false, true, false)));
                 UTF8Encoding utf = new UTF8Encoding();
-                if (String.IsNullOrEmpty(utf.GetString(html)) || utf.GetString(html) == "null")
+                if (string.IsNullOrEmpty(utf.GetString(html)) || utf.GetString(html) == "null")
                     return "0.0.0.0";
-                else
-                    return utf.GetString(html);
+                return utf.GetString(html);
             }
             catch (Exception)
             {
@@ -70,7 +69,7 @@ namespace FileAES
                 {
                     return UpdateStatus.AppLatest;
                 }
-                else if (latestVer != "0.0.0.0" && CheckServerConnection())
+                if (latestVer != "0.0.0.0" && CheckServerConnection())
                 {
                     string compareVersions = String.Format("https://api.mullak99.co.uk/FAES/CompareVersions.php?app=faes_legacy&branch={0}&version1={1}&version2={2}", "dev", currentVer, latestVer);
 
@@ -79,21 +78,17 @@ namespace FileAES
                     UTF8Encoding utf = new UTF8Encoding();
                     string result = utf.GetString(html).ToLower();
 
-                    if (String.IsNullOrEmpty(result) || result == "null")
+                    if (string.IsNullOrEmpty(result) || result == "null")
                         return UpdateStatus.ServerError;
-                    else if (result.Contains("not exist in the database!") || result == "version1 is newer than version2")
+                    if (result.Contains("not exist in the database!") || result == "version1 is newer than version2")
                         return UpdateStatus.AppNewer;
-                    else if (result == "version1 is older than version2")
+                    if (result == "version1 is older than version2")
                         return UpdateStatus.AppOutdated;
-                    else if (result == "version1 is equal to version2")
+                    if (result == "version1 is equal to version2")
                         return UpdateStatus.AppLatest;
-                    else
-                        return UpdateStatus.ServerError;
-                }
-                else
-                {
                     return UpdateStatus.ServerError;
                 }
+                return UpdateStatus.ServerError;
             }
             catch
             {
@@ -191,7 +186,7 @@ namespace FileAES
                     if (_appUpdateStatus == UpdateStatus.AppOutdated && !Program.GetSkipUpdate() && !_showOnce)
                     {
                         _showOnce = true;
-                        this.Show();
+                        Show();
                     }
                 }
                 _updateUI = false;
@@ -277,7 +272,7 @@ namespace FileAES
             try
             {
                 using (var client = new WebClient())
-                using (var stream = client.OpenRead("https://api.mullak99.co.uk/"))
+                using (_ = client.OpenRead("https://api.mullak99.co.uk/"))
                     return true;
             }
             catch

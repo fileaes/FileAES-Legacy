@@ -105,18 +105,11 @@ namespace FileAES
 
                 return text;
             }
-            set { }
         }
 
         private string _percentageStr { get { return $"{(int)((float)Value - Minimum) / ((float)Maximum - Minimum) * 100 } %"; } }
 
-        private string _currProgressStr
-        {
-            get
-            {
-                return $"{Value}/{Maximum}";
-            }
-        }
+        private string _currProgressStr => $"{Value}/{Maximum}";
 
         public TextProgressBar()
         {
